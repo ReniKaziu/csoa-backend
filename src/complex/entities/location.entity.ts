@@ -39,6 +39,7 @@ export class Location extends Common {
 
   get baseLocation() {
     return {
+      id: this.id,
       name: this.name,
       dimensions: this.dimensions,
       price: this.price,
