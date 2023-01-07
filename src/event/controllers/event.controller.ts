@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getRepository, LessThan, Not } from "typeorm";
+import { getRepository, In, LessThan, Not } from "typeorm";
 import { ERROR_MESSAGES } from "../../common/utilities/ErrorMessages";
 import { ErrorResponse } from "../../common/utilities/ErrorResponse";
 import { Helper } from "../../common/utilities/Helper";
@@ -165,7 +165,7 @@ export class EventController {
       await getRepository(Event).update(
         {
           ...(!weeklyGroupedId && { id: +request.params.eventId }),
-          status: EventStatus.DRAFT || EventStatus.WAITING_FOR_CONFIRMATION,
+          status: In([EventStatus.DRAFT, EventStatus.WAITING_FOR_CONFIRMATION]),
           ...(weeklyGroupedId && { weeklyGroupedId }),
         },
         {
