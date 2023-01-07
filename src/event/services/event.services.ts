@@ -37,6 +37,8 @@ export class EventService {
 
     const myTeamsIds = myTeams.map((player) => player.team.id).push(-1);
 
+    console.log({ mySports });
+
     const queryBuilder = eventsRepository
       .createQueryBuilder("event")
       .leftJoin("event.eventRequests", "request", "request.eventId = event.id AND request.status = 'confirmed'")
@@ -73,6 +75,8 @@ export class EventService {
     }
 
     const myEvents = await queryBuilder.getMany();
+    console.log({ myEvents });
+
     const myEventIds = myEvents.map((event) => event.id).concat(-1);
 
     const qb = eventsRepository
@@ -657,6 +661,26 @@ export class EventService {
 
   static patchSingleEvent = async (eventPayload, currentEvent: Event, request: Request) => {
     const eventRepository = getCustomRepository(EventRepository);
+    let {
+      body: {
+        startDate,
+        endDate,
+        notes,
+        name,
+        locationId,
+        sport,
+        status,
+        isPublic,
+        isTeam,
+        playersAge,
+        playersNumber,
+        isWeekly,
+        level,
+      },
+    } = request;
+    if (new Date(startDate) < new Date()) {
+      throw new Error("Ora e eventit nuk mund te jete  ne te shkuaren!");
+    }
 
     let eventToBeConfirmed = false;
     let eventToBeConfirmedByUser = false;
@@ -671,36 +695,46 @@ export class EventService {
       eventToBeCompleted = true;
     }
 
-    const mergedEvent = eventRepository.merge(currentEvent, eventPayload);
-    const updatedEvent = await eventRepository.save(mergedEvent);
+    startDate = startDate ? startDate : currentEvent.startDate.toISOString();
+    endDate = endDate ? endDate : currentEvent.endDate.toISOString();
+    locationId = locationId ? locationId : currentEvent.locationId;
 
-    // let notifications = [];
-    // let pushNotifications = [];
-    // const notificationBody = {
-    //   receiverId: originalRequest.receiverId,
-    //   type: NotificationType.REQUEST_CONFIRMED,
-    //   payload: {
-    //     eventName: updatedRequest.event.name,
-    //     playerName: updatedRequest.receiver.name,
-    //     requestId: updatedRequest.id,
-    //     exponentPushToken: invitedUser.pushToken,
-    //     title: `Krijuesi i eventit ${updatedRequest.event.name} pranoi kerkesen tuaj per t'u futur`,
-    //     body: "Futuni ne aplikacion dhe shikoni me shume",
-    //   },
-    // };
-    // const pushNotificationBody = {
-    //   to: invitedUser.pushToken,
-    //   title: `Krijuesi i eventit ${updatedRequest.event.name} pranoi kerkesen tuaj per t'u futur`,
-    //   body: "Futuni ne aplikacion dhe shikoni me shume",
-    //   data: { eventId: updatedRequest.event.id },
-    // };
+    const queryRunner = getManager().connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    let updatedEvent: any = false;
+    try {
+      const overlappingEvent = await queryRunner.manager
+        .createQueryBuilder()
+        .from("events", "e")
+        .where(`e.locationId = '${locationId}'`)
+        .andWhere("e.status NOT IN (:...statuses)", {
+          statuses: [EventStatus.DRAFT, EventStatus.CANCELED, EventStatus.REFUSED],
+        })
+        .andWhere(
+          new Brackets((qb) => {
+            qb.where(`(e.startDate < '${endDate}' AND e.endDate > '${startDate}')`);
+            qb.orWhere(`(e.startDate = '${startDate}' AND e.endDate = '${endDate}')`);
+          })
+        )
+        .andWhere("e.ts_deleted IS NULL")
+        .setLock("pessimistic_read")
+        .getRawOne();
 
-    // notifications.push(notificationBody);
-    // pushNotifications.push(pushNotificationBody);
-    // NotificationService.storeNotification(notifications);
-    // NotificationService.pushNotification(pushNotifications);
-
-    return updatedEvent;
+      if (overlappingEvent) {
+        return "Ky orar eshte i zene";
+      } else {
+        const mergedEvent = queryRunner.manager.merge(Event, currentEvent, eventPayload);
+        updatedEvent = await queryRunner.manager.save(mergedEvent);
+        await queryRunner.commitTransaction();
+        return updatedEvent;
+      }
+    } catch (error) {
+      console.log(error);
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
   };
 
   static addDays = (date, counter) => {

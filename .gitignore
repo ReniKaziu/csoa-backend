@@ -5,6 +5,7 @@ build/
 dist/
 tmp/
 temp/
+.env
 .DS_Store
 src/.DS_Store
 /public
