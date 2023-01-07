@@ -165,7 +165,7 @@ export class EventController {
       await getRepository(Event).update(
         {
           ...(!weeklyGroupedId && { id: +request.params.eventId }),
-          status: EventStatus.WAITING_FOR_CONFIRMATION ?? EventStatus.DRAFT,
+          status: EventStatus.WAITING_FOR_CONFIRMATION || EventStatus.DRAFT,
           ...(weeklyGroupedId && { weeklyGroupedId }),
         },
         {
