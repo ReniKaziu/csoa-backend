@@ -172,9 +172,9 @@ export class EventController {
           status:
             response.locals.jwt.userRole === UserRole.USER
               ? EventStatus.DELETED_BY_USER_BEFORE_CONFIRMATION
-              : EventStatus.REFUSED,
-          tsDeleted: new Date(),
-          deletedById: response.locals.jwt.userId,
+              : EventStatus.DRAFT,
+          tsDeleted: response.locals.jwt.userRole === UserRole.USER ? new Date() : null,
+          deletedById: response.locals.jwt.userRole === UserRole.USER ? response.locals.jwt.userId : null,
         }
       );
 
@@ -234,7 +234,7 @@ export class EventController {
       // NotificationService.pushNotification(pushNotifications);
       // }
 
-      return response.sendStatus(204);
+      return response.status(HttpStatusCode.OK).send("Eventi u fshi");
     } catch (err) {
       console.log({ err });
       return response.status(404).send(new ErrorResponse("Could not delete my events"));
