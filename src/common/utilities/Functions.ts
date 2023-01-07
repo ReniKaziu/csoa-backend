@@ -4,6 +4,19 @@ export class Functions {
   public key = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
   constructor() {}
 
+  static getCurrentDateTime() {
+    const date = new Date();
+    const now_utc = Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      date.getUTCHours(),
+      date.getUTCMinutes(),
+      date.getUTCSeconds()
+    );
+    return new Date(now_utc);
+  }
+
   static formatDate(currentDate): string {
     let date = new Date(currentDate);
     let month = "" + (date.getMonth() + 1);

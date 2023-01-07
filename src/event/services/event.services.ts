@@ -17,8 +17,9 @@ export class EventService {
   static listMyEvents = async (request: Request, response: Response) => {
     const eventsRepository = getCustomRepository(EventRepository);
     const teamUsersRepository = getRepository(TeamUsers);
+    const date = Functions.getCurrentDateTime();
     let todayDate = Functions.formatCurrentDate(new Date());
-    let hours = Functions.formatHours(new Date());
+    // let hours = Functions.formatHours(new Date());
     const userId = +response.locals.jwt.userId;
     const user = await UserService.findOne(userId);
     let mySports = [];
@@ -53,7 +54,7 @@ export class EventService {
         ],
       })
       .andWhere("event.startDate > :todayStart", {
-        todayStart: todayDate + " " + hours,
+        todayStart: date,
       })
       .andWhere(
         new Brackets((qb) => {
@@ -90,7 +91,7 @@ export class EventService {
         statuses: [EventStatus.CONFIRMED, EventStatus.WAITING_FOR_CONFIRMATION],
       })
       .andWhere("event.startDate > :todayStart", {
-        todayStart: todayDate + " " + hours,
+        todayStart: date,
       })
       .andWhere(
         new Brackets((qb) => {
