@@ -37,9 +37,6 @@ export class EventService {
 
     const myTeamsIds = myTeams.map((player) => player.team.id).push(-1);
 
-    console.log({ todayDate });
-    console.log({ hours });
-
     const queryBuilder = eventsRepository
       .createQueryBuilder("event")
       .leftJoin("event.eventRequests", "request", "request.eventId = event.id AND request.status = 'confirmed'")
@@ -76,8 +73,6 @@ export class EventService {
     }
 
     const myEvents = await queryBuilder.getMany();
-    console.log({ myEvents });
-
     const myEventIds = myEvents.map((event) => event.id).concat(-1);
 
     const qb = eventsRepository
