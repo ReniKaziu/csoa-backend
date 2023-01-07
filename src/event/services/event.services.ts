@@ -37,7 +37,8 @@ export class EventService {
 
     const myTeamsIds = myTeams.map((player) => player.team.id).push(-1);
 
-    console.log({ mySports });
+    console.log({ todayDate });
+    console.log({ hours });
 
     const queryBuilder = eventsRepository
       .createQueryBuilder("event")
