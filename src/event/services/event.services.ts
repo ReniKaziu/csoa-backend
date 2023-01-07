@@ -18,6 +18,7 @@ export class EventService {
     const eventsRepository = getCustomRepository(EventRepository);
     const teamUsersRepository = getRepository(TeamUsers);
     const date = Functions.getCurrentDateTime();
+    console.log("🚀 ~ file: event.services.ts:21 ~ EventService ~ listMyEvents= ~ date", date);
     let todayDate = Functions.formatCurrentDate(new Date());
     // let hours = Functions.formatHours(new Date());
     const userId = +response.locals.jwt.userId;
