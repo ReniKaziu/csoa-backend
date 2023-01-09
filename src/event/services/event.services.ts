@@ -731,7 +731,6 @@ export class EventService {
       await queryRunner.rollbackTransaction();
     } finally {
       await queryRunner.release();
-      await queryRunner.connection.close();
     }
   };
 
