@@ -175,6 +175,9 @@ export class Event extends Common {
       lineups: this.lineups,
       isConfirmedByUser: this.isConfirmedByUser,
       phoneNumber: this.phoneNumber,
+      isUserReservation: this.isUserReservation,
+      deletedById: this.deletedById,
+      weeklyGroupedId: this.weeklyGroupedId,
     };
   }
 
