@@ -691,8 +691,8 @@ export class EventService {
       eventToBeCompleted = true;
     }
 
-    startDate = startDate ? startDate : currentEvent.startDate.toISOString();
-    endDate = endDate ? endDate : currentEvent.endDate.toISOString();
+    const startDateToQuery = startDate ? startDate : currentEvent.startDate.toISOString();
+    const endDateToQuery = endDate ? endDate : currentEvent.endDate.toISOString();
     locationId = locationId ? locationId : currentEvent.locationId;
 
     const queryRunner = getManager().connection.createQueryRunner();
@@ -700,25 +700,34 @@ export class EventService {
     await queryRunner.startTransaction();
     let updatedEvent: any = false;
     try {
-      const overlappingEvent = await queryRunner.manager
-        .createQueryBuilder()
-        .from("events", "e")
-        .where(`e.locationId = '${locationId}'`)
-        .andWhere("e.status NOT IN (:...statuses)", {
-          statuses: [EventStatus.DRAFT, EventStatus.CANCELED, EventStatus.REFUSED],
-        })
-        .andWhere("e.id != :eventId", { eventId: request.params.eventId })
-        .andWhere(
-          new Brackets((qb) => {
-            qb.where(`(e.startDate < '${endDate}' AND e.endDate > '${startDate}')`);
-            qb.orWhere(`(e.startDate = '${startDate}' AND e.endDate = '${endDate}')`);
+      let overlapping = false;
+      if (
+        (currentEvent.status === EventStatus.DRAFT && status === EventStatus.WAITING_FOR_CONFIRMATION) ||
+        (startDate && startDate !== currentEvent.startDate && endDate && endDate !== currentEvent.endDate)
+      ) {
+        const overlappingEvent = await queryRunner.manager
+          .createQueryBuilder()
+          .from("events", "e")
+          .where(`e.locationId = '${locationId}'`)
+          .andWhere("e.status NOT IN (:...statuses)", {
+            statuses: [EventStatus.DRAFT, EventStatus.CANCELED, EventStatus.REFUSED],
           })
-        )
-        .andWhere("e.ts_deleted IS NULL")
-        .setLock("pessimistic_read")
-        .getRawOne();
+          .andWhere("e.id != :eventId", { eventId: request.params.eventId })
+          .andWhere(
+            new Brackets((qb) => {
+              qb.where(`(e.startDate < '${endDateToQuery}' AND e.endDate > '${startDateToQuery}')`);
+              qb.orWhere(`(e.startDate = '${startDateToQuery}' AND e.endDate = '${endDateToQuery}')`);
+            })
+          )
+          .andWhere("e.ts_deleted IS NULL")
+          .setLock("pessimistic_read")
+          .getRawOne();
+        if (overlappingEvent) {
+          overlapping = true;
+        }
+      }
 
-      if (overlappingEvent) {
+      if (overlapping) {
         return "Ky orar eshte i zene";
       } else {
         const mergedEvent = queryRunner.manager.merge(Event, currentEvent, eventPayload);
