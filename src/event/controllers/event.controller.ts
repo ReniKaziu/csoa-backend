@@ -234,10 +234,10 @@ export class EventController {
       // NotificationService.pushNotification(pushNotifications);
       // }
 
-      return response.status(HttpStatusCode.OK).send("Eventi u fshi");
+      return response.status(HttpStatusCode.OK).send(new SuccessResponse("Eventi u fshi"));
     } catch (err) {
       console.log({ err });
-      return response.status(404).send(new ErrorResponse("Could not delete my events"));
+      return response.status(404).send(new ErrorResponse("Nuk mund te fshihej eventi!"));
     }
   };
 
@@ -329,10 +329,10 @@ export class EventController {
       //   NotificationService.pushNotification(pushNotifications);
       // }
 
-      return response.sendStatus(204);
+      return response.status(HttpStatusCode.OK).send(new SuccessResponse("Eventi u kancelua"));
     } catch (err) {
       console.log({ err });
-      return response.status(404).send(new ErrorResponse("Could not cancel event"));
+      return response.status(404).send(new ErrorResponse("Nuk mund te kancelohej eventi!"));
     }
   };
 
@@ -397,10 +397,10 @@ export class EventController {
           deletedById: response.locals.jwt.userId,
         }
       );
-      return response.sendStatus(204);
+      return response.status(HttpStatusCode.OK).send(new SuccessResponse("Eventi u kancelua"));
     } catch (err) {
       console.log({ err });
-      return response.status(404).send(new ErrorResponse("Could not delete my events"));
+      return response.status(404).send(new ErrorResponse("Nuk mund te kancelohej eventi!"));
     }
   };
 }

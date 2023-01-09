@@ -18,9 +18,7 @@ export class EventService {
     const eventsRepository = getCustomRepository(EventRepository);
     const teamUsersRepository = getRepository(TeamUsers);
     const date = Functions.getCurrentDateTime();
-    console.log("🚀 ~ file: event.services.ts:21 ~ EventService ~ listMyEvents= ~ date", date);
     let todayDate = Functions.formatCurrentDate(new Date());
-    // let hours = Functions.formatHours(new Date());
     const userId = +response.locals.jwt.userId;
     const user = await UserService.findOne(userId);
     let mySports = [];
@@ -709,6 +707,7 @@ export class EventService {
         .andWhere("e.status NOT IN (:...statuses)", {
           statuses: [EventStatus.DRAFT, EventStatus.CANCELED, EventStatus.REFUSED],
         })
+        .andWhere("e.id != :eventId", { eventId: request.params.eventId })
         .andWhere(
           new Brackets((qb) => {
             qb.where(`(e.startDate < '${endDate}' AND e.endDate > '${startDate}')`);
@@ -718,6 +717,7 @@ export class EventService {
         .andWhere("e.ts_deleted IS NULL")
         .setLock("pessimistic_read")
         .getRawOne();
+      console.log(overlappingEvent);
 
       if (overlappingEvent) {
         return "Ky orar eshte i zene";
