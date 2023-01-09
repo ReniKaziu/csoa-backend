@@ -717,7 +717,6 @@ export class EventService {
         .andWhere("e.ts_deleted IS NULL")
         .setLock("pessimistic_read")
         .getRawOne();
-      console.log(overlappingEvent);
 
       if (overlappingEvent) {
         return "Ky orar eshte i zene";
@@ -732,6 +731,7 @@ export class EventService {
       await queryRunner.rollbackTransaction();
     } finally {
       await queryRunner.release();
+      await queryRunner.connection.close();
     }
   };
 
