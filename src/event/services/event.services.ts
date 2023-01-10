@@ -134,9 +134,51 @@ export class EventService {
 
     const publicEvents = await qb.getMany();
 
+    const myEventsMap = {};
+    const myEventsWeekly = [];
+
+    for (const myEvent of myEvents) {
+      if (myEvent.weeklyGroupedId) {
+        if (!myEventsMap[myEvent.weeklyGroupedId]) {
+          myEventsMap[myEvent.weeklyGroupedId] = 1;
+          myEventsWeekly.push(myEvent);
+        } else if (myEventsMap[myEvent.weeklyGroupedId] < 3) {
+          myEventsMap[myEvent.weeklyGroupedId] += 1;
+          myEventsWeekly.push(myEvent);
+        }
+      }
+    }
+
+    const myEventsWithoutWeekly = myEvents.filter((event) => event.weeklyGroupedId === null);
+
+    const myEventsResults = myEventsWithoutWeekly.concat(myEventsWeekly)?.sort((a, b) => {
+      return a.startDate > b.startDate ? 1 : -1;
+    });
+
+    const publicEventsMap = {};
+    const publicEventsWeekly = [];
+
+    for (const publicEvent of publicEvents) {
+      if (publicEvent.weeklyGroupedId) {
+        if (!publicEventsMap[publicEvent.weeklyGroupedId]) {
+          publicEventsMap[publicEvent.weeklyGroupedId] = 1;
+          publicEventsWeekly.push(publicEvent);
+        } else if (publicEventsMap[publicEvent.weeklyGroupedId] < 3) {
+          publicEventsMap[publicEvent.weeklyGroupedId] += 1;
+          publicEventsWeekly.push(publicEvent);
+        }
+      }
+    }
+
+    const publicEventsWithoutWeekly = publicEvents.filter((event) => event.weeklyGroupedId === null);
+
+    const publicEventsResults = publicEventsWithoutWeekly.concat(publicEventsWeekly)?.sort((a, b) => {
+      return a.startDate > b.startDate ? 1 : -1;
+    });
+
     const responseData = {
-      myEvents: myEvents.map((event) => event.toResponse),
-      publicEvents: publicEvents.map((event) => event.toResponse),
+      myEvents: myEventsResults.map((event) => event.toResponse),
+      publicEvents: publicEventsResults.map((event) => event.toResponse),
     };
 
     return responseData;
