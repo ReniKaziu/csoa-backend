@@ -11,7 +11,7 @@ module.exports = {
   database: process.env.DB_NAME,
   synchronize: false,
   timezone: "Z",
-  logging: false,
+  logging: true,
   entities: ["**/**/*.entity.js"],
   migrations: ["dist/migration/*.js"],
   subscribers: ["dist/**/*.subscriber.js"],
