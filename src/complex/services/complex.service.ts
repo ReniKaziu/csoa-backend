@@ -132,11 +132,6 @@ export class ComplexService {
       userReserved = `e.isUserReservation = 0`;
     }
 
-    console.log({ userReserved });
-    console.log({ id: request.params.id });
-    console.log({ from: body.time.from });
-    console.log({ to: body.time.to });
-
     const selectedStatus = Object.keys(body.status).filter((key) => body.status[key]);
 
     let statusCondition = `e.status IN ('${selectedStatus.join("','")}')`;
