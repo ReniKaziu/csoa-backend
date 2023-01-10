@@ -141,7 +141,7 @@ export class ComplexService {
       .createQueryBuilder("e")
       .withDeleted()
       .select(
-        "e.id, u.name, u.phoneNumber as phoneNumber, e.startDate, e.endDate, l.name as locationName, l.price, l.id as locationId, e.sport, e.status, e.isUserReservation, e.isWeekly"
+        "e.id, u.name, u.phoneNumber as phoneNumber, e.phoneNumber as phoneContact, e.notes as notes, e.startDate, e.endDate, l.name as locationName, l.price, l.id as locationId, e.sport, e.status, e.isUserReservation, e.isWeekly"
       )
       .innerJoin("locations", "l", "l.id = e.locationId")
       .innerJoin("complexes", "c", "c.id = l.complexId")
