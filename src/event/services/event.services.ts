@@ -770,7 +770,7 @@ export class EventService {
       }
 
       if (overlapping) {
-        return "Ky orar eshte i zene";
+        throw new Error();
       } else {
         const mergedEvent = queryRunner.manager.merge(Event, currentEvent, eventPayload);
         updatedEvent = await queryRunner.manager.save(mergedEvent);
@@ -780,6 +780,7 @@ export class EventService {
     } catch (error) {
       console.log(error);
       await queryRunner.rollbackTransaction();
+      return "Ky orar eshte i zene";
     } finally {
       await queryRunner.release();
     }
