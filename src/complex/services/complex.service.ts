@@ -136,6 +136,9 @@ export class ComplexService {
 
     let statusCondition = `e.status IN ('${selectedStatus.join("','")}')`;
 
+    let isWeekly = `(e.isWeekly = 0)`;
+    body.isWeekly ? (isWeekly = `(e.isWeekly = 1 OR e.isWeekly = 0)`) : isWeekly;
+
     const eventRepository = getCustomRepository(EventRepository);
     return eventRepository
       .createQueryBuilder("e")
@@ -153,7 +156,7 @@ export class ComplexService {
         startDate: body.time.from,
       })
       .andWhere("e.endDate <= :endDate", { endDate: body.time.to })
-      .andWhere(`${body.isWeekly ? "e.isWeekly = 1" : "e.isWeekly = 0"}`)
+      .andWhere(`${isWeekly}`)
       .orderBy("e.id", "DESC")
       .limit(24 * 62)
       .getRawMany();
