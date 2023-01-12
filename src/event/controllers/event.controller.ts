@@ -172,9 +172,9 @@ export class EventController {
           status:
             response.locals.jwt.userRole === UserRole.USER
               ? EventStatus.DELETED_BY_USER_BEFORE_CONFIRMATION
-              : EventStatus.DRAFT,
-          tsDeleted: response.locals.jwt.userRole === UserRole.USER ? new Date() : null,
-          deletedById: response.locals.jwt.userRole === UserRole.USER ? response.locals.jwt.userId : null,
+              : EventStatus.REFUSED,
+          tsDeleted: new Date(),
+          deletedById: response.locals.jwt.userId,
         }
       );
 
