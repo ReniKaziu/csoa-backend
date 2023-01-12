@@ -12,6 +12,9 @@ import { CreateEventDto } from "../dto/create-event.dto";
 import { WeeklyEventGroup } from "../entities/weekly.event.group.entity";
 import { WeeklyEventGroupRepository } from "../repositories/weekly.event.group.repository";
 import { UserRole } from "../../user/utilities/UserRole";
+import { NotificationService } from "../../notifications/services/notification.services";
+import { User } from "../../user/entities/user.entity";
+import { NotificationType } from "../../notifications/entities/notification.entity";
 
 export class EventService {
   static listMyEvents = async (request: Request, response: Response) => {
@@ -398,6 +401,21 @@ export class EventService {
         }
         if ((isWeekly && eventsToBeInserted.length === 12) || (!isWeekly && eventsToBeInserted.length === 1)) {
           createdEvent = queryRunner.manager.create(Event, eventsToBeInserted);
+
+          const complexUser = await getRepository(User)
+            .createQueryBuilder("user")
+            .leftJoinAndSelect("user.complex", "complex")
+            .leftJoinAndSelect("complex.locations", "location")
+            .where("location.id = :locationId", { locationId: createdEvent[0].locationId })
+            .getOne();
+
+          await NotificationService.createEventNotification(
+            complexUser.id,
+            NotificationType.EVENT_CREATED,
+            createdEvent[0].id,
+            createdEvent[0].name,
+            complexUser.pushToken
+          );
           if (isWeekly) {
             const weeklyEventGroup = new WeeklyEventGroup();
             weeklyEventGroup.startDate = eventsToBeInserted[0].startDate;

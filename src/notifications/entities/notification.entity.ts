@@ -4,7 +4,12 @@ import { Complex } from "../../complex/entities/complex.entity";
 import { User } from "../../user/entities/user.entity";
 
 export enum NotificationType {
+  EVENT_CREATED = "event created",
   EVENT_CONFIRMED = "event confirmed",
+  EVENT_REFUSED_BY_COMPLEX = "event refused by complex",
+  EVENT_DELETED_BY_USER_BEFORE_CONFIRMATION = "event deleted by user before confirmation",
+  EVENT_CANCELED_BY_USER_AFTER_CONFIRMATION = "event canceled by user after confirmation",
+  EVENT_CANCELED_BY_COMPLEX_AFTER_CONFIRMATION = "event canceled by complex after confirmation",
   EVENT_COMPLETED_RESULT = "event completed result",
   EVENT_COMPLETED_REVIEW = "event completed review",
   REQUEST_TO_EVENT = "user requested to enter event",

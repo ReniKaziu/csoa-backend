@@ -178,61 +178,30 @@ export class EventController {
         }
       );
 
-      // let notifications = [];
-      // let pushNotifications = [];
-
-      // if (response.locals.jwt.userRole === UserRole.USER) {
-      //   const complexAdmin = await getRepository(User).findOne({
-      //     where: { complexId: event.location.complex.id },
-      //   });
-      //   const notificationBody = {
-      //     receiverId: complexAdmin.id,
-      //     payload: {
-      //       eventName: event.name,
-      //       eventId: event.id,
-      //       exponentPushToken: complexAdmin.pushToken,
-      //       title: `Eventi ${event.name} eshte anuluar nga perdoruesi`,
-      //       body: "Futuni ne aplikacion dhe shikoni me shume",
-      //     },
-      //   };
-      //   const pushNotificationBody = {
-      //     to: complexAdmin.pushToken ?? "123",
-      //     title: `Eventi ${event.name} eshte anuluar perdoruesi`,
-      //     body: "Futuni ne aplikacion dhe shikoni me shume",
-      //     data: { eventId: event.id },
-      //   };
-
-      //   notifications.push(notificationBody);
-      //   pushNotifications.push(pushNotificationBody);
-      //   NotificationService.storeNotification(notifications);
-      //   NotificationService.pushNotification(pushNotifications);
-      // }
-      // if (response.locals.jwt.userRole === UserRole.COMPNAY) {
-      //   const creator = await getRepository(User).findOne({
-      //     where: { id: event.creatorId },
-      //   });
-      //   const notificationBody = {
-      //     receiverId: creator.id,
-      //     payload: {
-      //       eventName: event.name,
-      //       eventId: event.id,
-      //       exponentPushToken: creator.pushToken ?? "123",
-      //       title: `Eventi ${event.name} eshte anuluar nga kompleksi`,
-      //       body: "Futuni ne aplikacion dhe shikoni me shume",
-      //     },
-      //   };
-      // const pushNotificationBody = {
-      //   to: creator.pushToken,
-      //   title: `Eventi ${event.name} eshte anuluar nga kompleksi`,
-      //   body: "Futuni ne aplikacion dhe shikoni me shume",
-      //   data: { eventId: event.id },
-      // };
-
-      // notifications.push(notificationBody);
-      // pushNotifications.push(pushNotificationBody);
-      // NotificationService.storeNotification(notifications);
-      // NotificationService.pushNotification(pushNotifications);
-      // }
+      if (response.locals.jwt.userRole === UserRole.USER) {
+        const complexAdmin = await getRepository(User).findOne({
+          where: { complexId: event.location.complex.id },
+        });
+        await NotificationService.createEventNotification(
+          complexAdmin.id,
+          NotificationType.EVENT_DELETED_BY_USER_BEFORE_CONFIRMATION,
+          event.id,
+          event.name,
+          complexAdmin.pushToken
+        );
+      }
+      if (response.locals.jwt.userRole === UserRole.COMPNAY) {
+        const creator = await getRepository(User).findOne({
+          where: { id: event.creatorId },
+        });
+        await NotificationService.createEventNotification(
+          creator.id,
+          NotificationType.EVENT_REFUSED_BY_COMPLEX,
+          event.id,
+          event.name,
+          creator.pushToken
+        );
+      }
 
       return response.status(HttpStatusCode.OK).send(new SuccessResponse("Eventi u fshi"));
     } catch (err) {
@@ -273,61 +242,31 @@ export class EventController {
         }
       );
 
-      // let notifications = [];
-      // let pushNotifications = [];
+      if (response.locals.jwt.userRole === UserRole.USER) {
+        const complexAdmin = await getRepository(User).findOne({
+          where: { complexId: event.location.complex.id },
+        });
+        await NotificationService.createEventNotification(
+          complexAdmin.id,
+          NotificationType.EVENT_CANCELED_BY_USER_AFTER_CONFIRMATION,
+          event.id,
+          event.name,
+          complexAdmin.pushToken
+        );
+      }
+      if (response.locals.jwt.userRole === UserRole.COMPNAY) {
+        const creator = await getRepository(User).findOne({
+          where: { id: event.creatorId },
+        });
 
-      // if (response.locals.jwt.userRole === UserRole.USER) {
-      //   const complexAdmin = await getRepository(User).findOne({
-      //     where: { complexId: event.location.complex.id },
-      //   });
-      //   const notificationBody = {
-      //     receiverId: complexAdmin.id,
-      //     payload: {
-      //       eventName: event.name,
-      //       eventId: event.id,
-      //       exponentPushToken: complexAdmin.pushToken,
-      //       title: `Eventi i konfirmuar ${event.name} eshte anuluar nga perdoruesi`,
-      //       body: "Futuni ne aplikacion dhe shikoni me shume",
-      //     },
-      //   };
-      //   const pushNotificationBody = {
-      //     to: complexAdmin.pushToken ?? "123",
-      //     title: `Eventi ${event.name} eshte anuluar perdoruesi`,
-      //     body: "Futuni ne aplikacion dhe shikoni me shume",
-      //     data: { eventId: event.id },
-      //   };
-
-      //   notifications.push(notificationBody);
-      //   pushNotifications.push(pushNotificationBody);
-      //   NotificationService.storeNotification(notifications);
-      //   NotificationService.pushNotification(pushNotifications);
-      // }
-      // if (response.locals.jwt.userRole === UserRole.COMPNAY) {
-      //   const creator = await getRepository(User).findOne({
-      //     where: { id: event.creatorId },
-      //   });
-      // const notificationBody = {
-      //   receiverId: creator.id,
-      //   payload: {
-      //     eventName: event.name,
-      //     eventId: event.id,
-      //     exponentPushToken: creator.pushToken ?? "123",
-      //     title: `Eventi i konfirmuar ${event.name} eshte anuluar nga kompleksi`,
-      //     body: "Futuni ne aplikacion dhe shikoni me shume",
-      //   },
-      // };
-      // const pushNotificationBody = {
-      //   to: creator.pushToken ?? "123",
-      //   title: `Eventi ${event.name} eshte anuluar nga kompleksi`,
-      //   body: "Futuni ne aplikacion dhe shikoni me shume",
-      //   data: { eventId: event.id },
-      // };
-
-      //   notifications.push(notificationBody);
-      //   pushNotifications.push(pushNotificationBody);
-      //   NotificationService.storeNotification(notifications);
-      //   NotificationService.pushNotification(pushNotifications);
-      // }
+        await NotificationService.createEventNotification(
+          creator.id,
+          NotificationType.EVENT_CANCELED_BY_COMPLEX_AFTER_CONFIRMATION,
+          event.id,
+          event.name,
+          creator.pushToken
+        );
+      }
 
       return response.status(HttpStatusCode.OK).send(new SuccessResponse("Eventi u kancelua"));
     } catch (err) {

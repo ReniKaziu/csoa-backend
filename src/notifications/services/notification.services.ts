@@ -291,4 +291,46 @@ export class NotificationService {
     NotificationService.storeNotification(notifications);
     NotificationService.pushNotification(pushNotifications);
   };
+
+  static createEventNotification = async (
+    receiverId: number,
+    notificationType: NotificationType,
+    eventId: number,
+    eventName: string,
+    userToken: string
+  ) => {
+    let notifications = [];
+    let pushNotifications = [];
+
+    const titles = {
+      [NotificationType.EVENT_CREATED]: `Nje event i ri eshte krijuar ne kompleks`,
+      [NotificationType.EVENT_DELETED_BY_USER_BEFORE_CONFIRMATION]: `Eventi ${eventName} u kancelua nga perdoruesi para konfirmimit`,
+      [NotificationType.EVENT_REFUSED_BY_COMPLEX]: `Eventi ${eventName} u refuzua nga kompleksi`,
+      [NotificationType.EVENT_CANCELED_BY_USER_AFTER_CONFIRMATION]: `Eventi i konfirmuar ${eventName} u kancelua nga perdoruesi`,
+      [NotificationType.EVENT_CANCELED_BY_COMPLEX_AFTER_CONFIRMATION]: `Eventi i konfirmuar ${eventName} u kancelua nga kompleksi`,
+    };
+
+    const notificationBody = {
+      receiverId: receiverId,
+      type: notificationType,
+      payload: {
+        eventId: eventId,
+        eventName: eventName,
+        exponentPushToken: userToken,
+        title: titles[notificationType],
+        body: "Futuni ne aplikacion dhe shikoni me shume",
+      },
+    };
+    const pushNotificationBody = {
+      to: userToken ?? "123",
+      title: titles[notificationType],
+      body: "Futuni ne aplikacion dhe shikoni me shume",
+      data: { eventId },
+    };
+
+    notifications.push(notificationBody);
+    pushNotifications.push(pushNotificationBody);
+    NotificationService.storeNotification(notifications);
+    NotificationService.pushNotification(pushNotifications);
+  };
 }
