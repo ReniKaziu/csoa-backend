@@ -161,6 +161,15 @@ export class EventController {
   static delete = async (request: Request, response: Response) => {
     const weeklyGroupedId = +request.query.weeklyGroupedId;
     const event = await EventService.getById(+request.params.eventId);
+    let newStatus = "";
+    if (!event.isUserReservation) {
+      newStatus = EventStatus.CANCELED;
+    }
+    if (event.isUserReservation && response.locals.jwt.userRole === UserRole.USER) {
+      newStatus = EventStatus.CANCELED;
+    } else {
+      newStatus = EventStatus.REFUSED;
+    }
     try {
       await getRepository(Event).update(
         {
@@ -169,10 +178,7 @@ export class EventController {
           ...(weeklyGroupedId && { weeklyGroupedId }),
         },
         {
-          status:
-            response.locals.jwt.userRole === UserRole.USER
-              ? EventStatus.DELETED_BY_USER_BEFORE_CONFIRMATION
-              : EventStatus.REFUSED,
+          status: newStatus,
           tsDeleted: new Date(),
           deletedById: response.locals.jwt.userId,
         }
@@ -214,6 +220,15 @@ export class EventController {
     const weeklyGroupedId = +request.query.weeklyGroupedId;
     const eventId = +request.params.eventId;
     const event = await EventService.getById(eventId);
+    let newStatus = "";
+    if (!event.isUserReservation) {
+      newStatus = EventStatus.CANCELED;
+    }
+    if (event.isUserReservation && response.locals.jwt.userRole === UserRole.USER) {
+      newStatus = EventStatus.CANCELED;
+    } else {
+      newStatus = EventStatus.REFUSED;
+    }
     try {
       if (weeklyGroupedId) {
         await getRepository(Event).update(
@@ -223,7 +238,7 @@ export class EventController {
             weeklyGroupedId: weeklyGroupedId,
           },
           {
-            status: EventStatus.CANCELED,
+            status: newStatus,
             tsDeleted: new Date(),
             deletedById: response.locals.jwt.userId,
           }
@@ -236,7 +251,7 @@ export class EventController {
           status: EventStatus.CONFIRMED,
         },
         {
-          status: EventStatus.CANCELED,
+          status: newStatus,
           tsDeleted: new Date(),
           deletedById: response.locals.jwt.userId,
         }
