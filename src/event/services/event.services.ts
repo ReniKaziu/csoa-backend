@@ -53,6 +53,7 @@ export class EventService {
           EventStatus.WAITING_FOR_CONFIRMATION,
           EventStatus.CONFIRMED,
           EventStatus.COMPLETED,
+          EventStatus.REFUSED,
         ],
       })
       .andWhere("event.startDate > :todayStart", {
