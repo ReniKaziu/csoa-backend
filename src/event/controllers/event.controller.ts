@@ -117,39 +117,22 @@ export class EventController {
       ...(!weeklyGroupedId && { id: +request.params.eventId }),
       ...(weeklyGroupedId && { weeklyGroupedId }),
     };
-    // const foundEvent = await EventService.findById(+request.params.eventId);
+    const foundEvent = await EventService.findById(+request.params.eventId);
     try {
       const event = await getRepository(Event).update(firstArgument, {
         status: EventStatus.CONFIRMED,
       });
 
-      // let notifications = [];
-      // let pushNotifications = [];
-
-      // const creator = await getRepository(User).findOne({
-      //   where: { id: foundEvent.creatorId },
-      // });
-      // const notificationBody = {
-      //   receiverId: creator.id,
-      //   payload: {
-      //     eventName: foundEvent.name,
-      //     eventId: foundEvent.id,
-      //     exponentPushToken: creator.pushToken ?? "123",
-      //     title: `Eventi ${foundEvent.name} eshte pranuar nga kompleksi`,
-      //     body: "Futuni ne aplikacion dhe shikoni me shume",
-      //   },
-      // };
-      // const pushNotificationBody = {
-      //   to: creator.pushToken,
-      //   title: `Eventi ${foundEvent.name} eshte pranuar nga kompleksi`,
-      //   body: "Futuni ne aplikacion dhe shikoni me shume",
-      //   data: { eventId: foundEvent.id },
-      // };
-
-      // notifications.push(notificationBody);
-      // pushNotifications.push(pushNotificationBody);
-      // NotificationService.storeNotification(notifications);
-      // NotificationService.pushNotification(pushNotifications);
+      const creator = await getRepository(User).findOne({
+        where: { id: foundEvent.creatorId },
+      });
+      await NotificationService.createEventNotification(
+        creator.id,
+        NotificationType.EVENT_CONFIRMED,
+        foundEvent.id,
+        foundEvent.name,
+        creator.pushToken
+      );
 
       return response.status(HttpStatusCode.OK).send(new SuccessResponse(event));
     } catch (err) {

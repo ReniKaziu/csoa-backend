@@ -308,6 +308,7 @@ export class NotificationService {
       [NotificationType.EVENT_REFUSED_BY_COMPLEX]: `Eventi ${eventName} u refuzua nga kompleksi`,
       [NotificationType.EVENT_CANCELED_BY_USER_AFTER_CONFIRMATION]: `Eventi i konfirmuar ${eventName} u kancelua nga perdoruesi`,
       [NotificationType.EVENT_CANCELED_BY_COMPLEX_AFTER_CONFIRMATION]: `Eventi i konfirmuar ${eventName} u kancelua nga kompleksi`,
+      [NotificationType.EVENT_CONFIRMED]: `Eventi ${eventName} u konfirmua nga kompleksi`,
     };
 
     const notificationBody = {
