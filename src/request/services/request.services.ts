@@ -461,7 +461,7 @@ export class RequestService {
     const invitedTeam = await teamRepository
       .createQueryBuilder("team")
       .leftJoinAndSelect("team.user", "u")
-      .where("team.id = :id", { id: event.organiserTeamId })
+      .where("team.id = :id", { id: team.id })
       .getOne();
 
     await NotificationService.createRequestNotification(
