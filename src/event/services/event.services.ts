@@ -47,6 +47,7 @@ export class EventService {
       .leftJoinAndSelect("location.complex", "complex")
       .leftJoinAndSelect("event.organiserTeam", "senderTeam")
       .leftJoinAndSelect("event.receiverTeam", "receiverTeam")
+      .withDeleted()
       .where("event.status IN (:...statuses)", {
         statuses: [
           EventStatus.DRAFT,
