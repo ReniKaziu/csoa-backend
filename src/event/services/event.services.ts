@@ -495,6 +495,7 @@ export class EventService {
       .leftJoinAndSelect("event.eventRequests", "eventRequests", `eventRequests.status = 'confirmed'`)
       .leftJoinAndSelect("eventRequests.receiver", "eventPlayer")
       .where("event.id = :id", { id: eventId })
+      .withDeleted()
       .getOne();
 
     return event.toResponseWithPlayers;
