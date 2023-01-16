@@ -12,7 +12,7 @@ import { RequestService } from "../services/request.services";
 export class RequestController {
   static listPossibleUsersForEvent = async (request: Request, response: Response) => {
     try {
-      const event = await EventService.findById(+request.params.eventId, false);
+      const event = await EventService.findById(+request.params.eventId, true);
       if (Helper.isDefined(event)) {
         const results = await RequestService.listPossibleUsersForEvent(event, request, response);
         return response.status(HttpStatusCode.OK).send(new SuccessResponse({ results }));
