@@ -47,6 +47,16 @@ export class PermissionMiddleware {
     next();
   };
 
+  static checkIfMe = async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = res.locals.jwt;
+
+    if (req.params && req.params.userId && +req.params.userId === userId) {
+      next();
+    } else {
+      return res.status(403).send(ERROR_MESSAGES.NOT_AUTHORIZED);
+    }
+  };
+
   static checkIfOwner = async (req: Request, res: Response, next: NextFunction) => {
     const { userId, userRole } = res.locals.jwt;
     if (userRole === UserRole.ADMIN) {

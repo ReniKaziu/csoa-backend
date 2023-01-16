@@ -57,6 +57,13 @@ export class UserRouter {
       UserController.putById,
     ]);
 
+    app.put("/users/:userId/deactivate", [
+      AuthenticationMiddleware.checkJwtToken,
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
+      PermissionMiddleware.checkIfMe,
+      UserController.deactivate,
+    ]);
+
     app.put("/users/:userId/sports", [
       AuthenticationMiddleware.checkJwtToken,
       PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),

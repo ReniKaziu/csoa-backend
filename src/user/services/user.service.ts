@@ -199,6 +199,14 @@ export class UserService {
     return finalUser;
   };
 
+  static deactivate = async (currentUser: User) => {
+    const userRepository = getCustomRepository(UserRepository);
+
+    await userRepository.update({ id: currentUser.id }, { tsDeleted: new Date() });
+
+    return "Perdoruesi u caktivizua";
+  };
+
   static updateSport = async (sportsPayload, user: User) => {
     const userRepository = getCustomRepository(UserRepository);
     for (const sport in user.sports as any) {
