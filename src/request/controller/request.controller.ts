@@ -12,7 +12,7 @@ import { RequestService } from "../services/request.services";
 export class RequestController {
   static listPossibleUsersForEvent = async (request: Request, response: Response) => {
     try {
-      const event = await EventService.findById(+request.params.eventId);
+      const event = await EventService.findById(+request.params.eventId, false);
       if (Helper.isDefined(event)) {
         const results = await RequestService.listPossibleUsersForEvent(event, request, response);
         return response.status(HttpStatusCode.OK).send(new SuccessResponse({ results }));
@@ -27,7 +27,7 @@ export class RequestController {
 
   static listInvitationsForEvent = async (request: Request, response: Response) => {
     try {
-      const event = await EventService.findById(+request.params.eventId);
+      const event = await EventService.findById(+request.params.eventId, true);
       if (Helper.isDefined(event)) {
         const results = await RequestService.listInvitationsForEvent(event, request, response);
         return response.status(HttpStatusCode.OK).send(new SuccessResponse({ results }));
@@ -42,7 +42,7 @@ export class RequestController {
 
   static invitePlayer = async (request: Request, response: Response) => {
     try {
-      const event = await EventService.findById(+request.params.eventId);
+      const event = await EventService.findById(+request.params.eventId, false);
       const user = await UserService.findOne(+request.params.userId);
       const result = await RequestService.inviteUser(event, user, request, response);
       response.status(HttpStatusCode.OK).send(new SuccessResponse({ result }));
@@ -54,7 +54,7 @@ export class RequestController {
 
   static requestToEnter = async (request: Request, response: Response) => {
     try {
-      const event = await EventService.findById(+request.params.eventId);
+      const event = await EventService.findById(+request.params.eventId, false);
       const creator = await UserService.findOne(event.creatorId);
       const result = await RequestService.requestToEnter(event, creator, request, response);
       response.status(HttpStatusCode.OK).send(new SuccessResponse({ result }));
@@ -96,7 +96,7 @@ export class RequestController {
 
   static listPossibleTeamsForEvent = async (request: Request, response: Response) => {
     try {
-      const event = await EventService.findById(+request.params.eventId);
+      const event = await EventService.findById(+request.params.eventId, false);
       if (Helper.isDefined(event)) {
         const results = await RequestService.listPossibleTeamsForEvent(event, request, response);
         return response.status(HttpStatusCode.OK).send(new SuccessResponse({ results }));
@@ -111,7 +111,7 @@ export class RequestController {
 
   static listTeamsInvitationsForEvent = async (request: Request, response: Response) => {
     try {
-      const event = await EventService.findById(+request.params.eventId);
+      const event = await EventService.findById(+request.params.eventId, false);
       if (Helper.isDefined(event)) {
         const results = await RequestService.listTeamsInvitationsForEvent(event, request, response);
         return response.status(HttpStatusCode.OK).send(new SuccessResponse({ results }));
@@ -126,7 +126,7 @@ export class RequestController {
 
   static inviteTeam = async (request: Request, response: Response) => {
     try {
-      const event = await EventService.findById(+request.params.eventId);
+      const event = await EventService.findById(+request.params.eventId, false);
       const team = await TeamService.findOne(+request.params.teamId);
       const result = await RequestService.inviteTeam(event, team, request, response);
       response.status(HttpStatusCode.OK).send(new SuccessResponse({ result }));
@@ -138,7 +138,7 @@ export class RequestController {
 
   static teamRequestToEnter = async (request: Request, response: Response) => {
     try {
-      const event = await EventService.findById(+request.params.eventId);
+      const event = await EventService.findById(+request.params.eventId, false);
       const team = await TeamService.findOne(+request.params.teamId);
       const result = await RequestService.teamRequestToEnter(event, team, request, response);
       response.status(HttpStatusCode.OK).send(new SuccessResponse({ result }));

@@ -117,7 +117,7 @@ export class EventController {
       ...(!weeklyGroupedId && { id: +request.params.eventId }),
       ...(weeklyGroupedId && { weeklyGroupedId }),
     };
-    const foundEvent = await EventService.findById(+request.params.eventId);
+    const foundEvent = await EventService.findById(+request.params.eventId, false);
     try {
       const event = await getRepository(Event).update(firstArgument, {
         status: EventStatus.CONFIRMED,
@@ -289,7 +289,7 @@ export class EventController {
 
   static patchById = async (request: Request, response: Response) => {
     try {
-      const event = await EventService.findById(+request.params.eventId);
+      const event = await EventService.findById(+request.params.eventId, false);
       if (Helper.isDefined(event)) {
         const updatedTeam = await EventService.patch(request.body, event, request);
         response.status(HttpStatusCode.OK).send(new SuccessResponse(updatedTeam));
@@ -305,7 +305,7 @@ export class EventController {
 
   static patchSingleEvent = async (request: Request, response: Response) => {
     try {
-      const event = await EventService.findById(+request.params.eventId);
+      const event = await EventService.findById(+request.params.eventId, true);
       if (Helper.isDefined(event)) {
         const updatedTeam = await EventService.patchSingleEvent(request.body, event, request);
         response.status(HttpStatusCode.OK).send(new SuccessResponse(updatedTeam));

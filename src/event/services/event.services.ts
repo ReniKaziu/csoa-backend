@@ -501,10 +501,16 @@ export class EventService {
     return event.toResponseWithPlayers;
   };
 
-  static findById = async (eventId: number) => {
+  static findById = async (eventId: number, withDeleted: boolean) => {
     const eventRepository = getCustomRepository(EventRepository);
 
-    const event = await eventRepository.createQueryBuilder("event").where("event.id = :id", { id: eventId }).getOne();
+    const qb = eventRepository.createQueryBuilder("event").where("event.id = :id", { id: eventId });
+
+    if (withDeleted) {
+      qb.withDeleted();
+    }
+
+    const event = await qb.getOne();
 
     return event;
   };

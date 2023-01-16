@@ -76,6 +76,7 @@ export class PermissionMiddleware {
         .createQueryBuilder("e")
         .where("e.id = :eventId", { eventId: req.params.eventId })
         .andWhere("e.creatorId = :id", { id: userId })
+        .withDeleted()
         .getOne();
       if (event) {
         next();
@@ -88,6 +89,7 @@ export class PermissionMiddleware {
         .leftJoinAndSelect("e.location", "l")
         .leftJoinAndSelect("l.complex", "c")
         .where("e.id = :eventId", { eventId: req.params.eventId })
+        .withDeleted()
         .getOne();
 
       const complex = await getRepository(Complex)
