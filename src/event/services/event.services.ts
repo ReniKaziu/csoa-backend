@@ -21,7 +21,7 @@ export class EventService {
     const eventsRepository = getCustomRepository(EventRepository);
     const teamUsersRepository = getRepository(TeamUsers);
     const date = Functions.getCurrentDateTime();
-    let todayDate = Functions.formatCurrentDate(new Date());
+    let twoDaysLater = Functions.formatTwoDaysLaterDate(new Date());
     const userId = +response.locals.jwt.userId;
     const user = await UserService.findOne(userId);
     let mySports = [];
@@ -73,7 +73,7 @@ export class EventService {
 
     if (request.query && request.query.todayEvents === "true") {
       queryBuilder.andWhere("event.startDate < :todayEnd", {
-        todayEnd: todayDate + " 23:59:59",
+        todayEnd: twoDaysLater + " 03:59:59",
       });
     }
 
@@ -133,7 +133,7 @@ export class EventService {
 
     if (request.query && request.query.todayEvents === "true") {
       qb.andWhere("event.startDate < :todayEnd", {
-        todayEnd: todayDate + " 23:59:59",
+        todayEnd: twoDaysLater + " 03:59:59",
       });
     }
 
@@ -726,6 +726,10 @@ export class EventService {
 
   static patchSingleEvent = async (eventPayload, currentEvent: Event, request: Request) => {
     const eventRepository = getCustomRepository(EventRepository);
+    if (currentEvent.tsDeleted) {
+      currentEvent.tsDeleted = null;
+      await eventRepository.save(currentEvent);
+    }
     let {
       body: {
         startDate,
