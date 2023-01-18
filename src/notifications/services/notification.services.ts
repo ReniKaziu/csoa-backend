@@ -78,7 +78,7 @@ export class NotificationService {
         type: NotificationType.CHAT_USER,
         payload: {
           eventChat: body.eventChat,
-          exponentPushToken: receiverUser.pushToken,
+          exponentPushToken: receiverUser.pushToken ?? "123",
           title: `Mesazh i ri nga ${senderUser.name}`,
           body: body.payload.message,
         },
@@ -117,7 +117,7 @@ export class NotificationService {
           type: NotificationType.CHAT_TEAM,
           payload: {
             eventChat: body.eventChat,
-            exponentPushToken: teamPlayer.player.pushToken,
+            exponentPushToken: teamPlayer.player.pushToken ?? "123",
             title: `Mesazh i ri nga ${senderName}`,
             body: body.payload.message,
           },
