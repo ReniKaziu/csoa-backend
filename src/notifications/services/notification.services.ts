@@ -77,7 +77,7 @@ export class NotificationService {
         senderId: senderUser.id,
         type: NotificationType.CHAT_USER,
         payload: {
-          eventChat: body.eventChat,
+          userId: body.userId,
           exponentPushToken: receiverUser.pushToken ?? "123",
           title: `Mesazh i ri nga ${senderUser.name}`,
           body: body.payload.message,
@@ -85,7 +85,7 @@ export class NotificationService {
       };
       const pushNotifications = [];
       const pushNotificationBody = {
-        to: receiverUser.pushToken,
+        to: receiverUser.pushToken ?? "123",
         title: `Mesazh i ri nga ${senderUser.name}`,
         body: body.payload.message,
         data: { eventChat: body.eventChat },
@@ -109,32 +109,30 @@ export class NotificationService {
         .select("user.name")
         .where("user.id = :senderId", { senderId })
         .getOne();
-      let notifications = [];
+      const notifications = [];
+      const pushNotifications = [];
       for (const teamPlayer of teamPlayers) {
         const notificationBody = {
           receiverId: teamPlayer.player.id,
           senderId: senderId,
           type: NotificationType.CHAT_TEAM,
           payload: {
-            eventChat: body.eventChat,
+            teamId: body.payload.teamId,
             exponentPushToken: teamPlayer.player.pushToken ?? "123",
-            title: `Mesazh i ri nga ${senderName}`,
+            title: `Mesazh i ri nga ${senderName.name}`,
             body: body.payload.message,
           },
         };
+        const pushNotificationBody = {
+          to: teamPlayer.player.pushToken ?? "123",
+          title: `Mesazh i ri nga ${senderName.name}`,
+          body: body.payload.message,
+          data: { eventChat: body.payload.teamId },
+        };
+        pushNotifications.push(pushNotificationBody);
         notifications.push(notificationBody);
       }
       NotificationService.storeNotification(notifications);
-
-      const tokens = teamPlayers.map((teamPlayer) => teamPlayer.player.pushToken);
-      const pushNotifications = [];
-      const pushNotificationBody = {
-        to: tokens,
-        title: `Mesazh i ri nga ${senderName}`,
-        body: body.payload.message,
-        data: { eventChat: body.eventChat },
-      };
-      pushNotifications.push(pushNotificationBody);
       NotificationService.pushNotification(pushNotifications);
     }
 
@@ -152,32 +150,33 @@ export class NotificationService {
         .select("user.name")
         .where("user.id = :senderId", { senderId })
         .getOne();
-      let notifications = [];
+      const notifications = [];
+      const pushNotifications = [];
       for (const eventPlayer of eventPlayers) {
         const notificationBody = {
           receiverId: eventPlayer.receiver.id,
           senderId: senderId,
           type: NotificationType.CHAT_EVENT,
           payload: {
-            eventChat: body.eventChat,
-            exponentPushToken: eventPlayer.receiver.pushToken,
-            title: `Mesazh i ri nga ${senderName}`,
+            eventId: body.payload.eventId,
+            exponentPushToken: eventPlayer.receiver.pushToken ?? "123",
+            title: `Mesazh i ri nga ${senderName.name}`,
             body: body.payload.message,
           },
         };
+        const pushNotificationBody = {
+          to: eventPlayer.receiver.pushToken ?? "123",
+          title: `Mesazh i ri nga ${senderName.name}`,
+          body: body.payload.message,
+          data: { eventChat: body.payload.eventId },
+        };
+        pushNotifications.push(pushNotificationBody);
         notifications.push(notificationBody);
       }
-      NotificationService.storeNotification(notifications);
+      console.log(notifications);
+      console.log(pushNotifications);
 
-      const tokens = eventPlayers.map((eventPlayer) => eventPlayer.receiver.pushToken);
-      const pushNotifications = [];
-      const pushNotificationBody = {
-        to: tokens,
-        title: `Mesazh i ri nga ${senderName}`,
-        body: body.payload.message,
-        data: { eventChat: body.eventChat },
-      };
-      pushNotifications.push(pushNotificationBody);
+      NotificationService.storeNotification(notifications);
       NotificationService.pushNotification(pushNotifications);
     }
   };
