@@ -86,6 +86,10 @@ export class Event extends Common {
   @Column("tinyint", { nullable: true, name: "isDraw" })
   public isDraw: boolean;
 
+  @Index()
+  @Column("tinyint", { name: "isSent", default: false })
+  public isSent: boolean;
+
   @Column("varchar", { nullable: true, name: "result" })
   public result: string;
 
