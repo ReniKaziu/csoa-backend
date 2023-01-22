@@ -126,4 +126,4 @@ const pushNotification = async (payload) => {
   }
 };
 
-new CronJob("*/2 * * * * *", checkForCompletedEvents, null, true, "Europe/Rome");
+new CronJob("*/15 * * * *", checkForCompletedEvents, null, true, "Europe/Rome");
