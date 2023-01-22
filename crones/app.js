@@ -17,14 +17,6 @@ const user = process.env.DB_USER;
 const database = process.env.DB_NAME;
 const password = process.env.DB_PASSWORD;
 
-//  query example
-// connection.query(
-//   'Select * from users',
-//   function (err, results, fields) {
-//     console.log({ results }); // results contains rows returned by server
-//   }
-// );
-
 function getCurrentDateTime() {
   const date = new Date();
   const now_utc = Date.UTC(
@@ -42,6 +34,7 @@ const connection = createConnection["createConnection"](host, user, database, pa
 
 const checkForCompletedEvents = () => {
   const notifications = [];
+  const pushNotifications = [];
   const dateNow = getCurrentDateTime();
   const selectEventsQuery = `SELECT 
                               event.id as eventId, 
@@ -55,7 +48,7 @@ const checkForCompletedEvents = () => {
                                 LEFT JOIN users receiverTeamCaptain ON receiverTeamCaptain.id=event.receiverTeamCaptainId AND (receiverTeamCaptain.ts_deleted IS NULL) 
                                   WHERE status = 'confirmed' AND result IS NULL AND isSent = 0 AND endDate < '${dateNow.toISOString()}'`;
   const updateEventsQuery = `UPDATE events SET events.isSent = 1 WHERE events.id IN (?)`;
-  const insertNotificationQuery = `INSERT INTO notifications(id, ts_created, ts_last_modified, ts_deleted, isRead, payload, type, complexId, senderId, receiverId) VALUES ?`;
+  const insertNotificationQuery = `INSERT INTO notifications(payload, type, receiverId) VALUES ?`;
 
   // 1- Select events to be updated query
   connection.query(selectEventsQuery, (err, results, fields) => {
@@ -63,32 +56,44 @@ const checkForCompletedEvents = () => {
       const ids = [];
       for (const result of results) {
         ids.push(result.eventId);
-        const eventNotification = [];
-        const organiserCaptainNotificationBody = {
-          receiverId: result.organiserTeamCaptainId,
-          type: "cron update result notification",
-          payload: {
+        const organiserCaptainNotificationBody = [
+          JSON.stringify({
             eventId: result.eventId,
             eventName: result.eventName,
-            exponentPushToken: result.organiserPushToken,
+            exponentPushToken: result.organiserPushToken ?? "123",
             title: `Eventi: ${result.eventName} ka perfunduar. Mund te vendosni rezultatin e ndeshjes`,
             body: "Futuni ne aplikacion dhe vendosni rezultatin",
-          },
-        };
-        const receiverCaptainNotificationBody = {
-          receiverId: result.receiverTeamCaptainId,
-          type: "cron update result notification",
-          payload: {
+          }),
+          "cron update result notification",
+          result.organiserTeamCaptainId,
+        ];
+        const receiverCaptainNotificationBody = [
+          JSON.stringify({
             eventId: result.eventId,
             eventName: result.eventName,
-            exponentPushToken: result.receiverPushToken,
+            exponentPushToken: result.receiverPushToken ?? "123",
             title: `Eventi: ${result.eventName} ka perfunduar. Mund te vendosni rezultatin e ndeshjes`,
             body: "Futuni ne aplikacion dhe vendosni rezultatin",
-          },
+          }),
+          "cron update result notification",
+          result.receiverTeamCaptainId,
+        ];
+        const organiserPushNotificationBody = {
+          to: result.organiserPushToken ?? "123",
+          title: `Eventi: ${result.eventName} ka perfunduar. Mund te vendosni rezultatin e ndeshjes`,
+          body: "Futuni ne aplikacion dhe vendosni rezultatin",
+          data: { eventId: result.eventId },
         };
-        eventNotification.push(organiserCaptainNotificationBody);
-        eventNotification.push(receiverCaptainNotificationBody);
-        notifications.push(eventNotification);
+        const receiverPushNotificationBody = {
+          to: result.receiverPushToken ?? "123",
+          title: `Eventi: ${result.eventName} ka perfunduar. Mund te vendosni rezultatin e ndeshjes`,
+          body: "Futuni ne aplikacion dhe vendosni rezultatin",
+          data: { eventId: result.eventId },
+        };
+        notifications.push(organiserCaptainNotificationBody);
+        notifications.push(receiverCaptainNotificationBody);
+        pushNotifications.push(organiserPushNotificationBody);
+        pushNotifications.push(receiverPushNotificationBody);
       }
 
       // 2- Update events query
@@ -97,11 +102,12 @@ const checkForCompletedEvents = () => {
       });
 
       // 3- Insert notification query
-      connection.query(insertNotificationQuery, notifications, (err, results, fields) => {
-        console.log(notifications);
-        console.log("result from notif", results);
-        // console.log("insert notification");
+      connection.query(insertNotificationQuery, [notifications], (err, results, fields) => {
+        console.log("insert notification");
       });
+
+      // 4- Push notifications
+      pushNotification(pushNotifications);
     }
   });
 };
