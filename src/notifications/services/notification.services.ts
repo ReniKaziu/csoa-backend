@@ -1,7 +1,9 @@
 import Axios from "axios";
 import { Request, Response } from "express";
 import { getCustomRepository, getRepository } from "typeorm";
+import { Event } from "../../event/entities/event.entity";
 import { Request as Invitation, RequestStatus } from "../../request/entities/request.entity";
+import { Team } from "../../team/entities/team.entity";
 import { TeamUsers } from "../../team/entities/team.users.entity";
 import { User } from "../../user/entities/user.entity";
 import { Notification, NotificationType } from "../entities/notification.entity";
@@ -77,7 +79,8 @@ export class NotificationService {
         senderId: senderUser.id,
         type: NotificationType.CHAT_USER,
         payload: {
-          eventChat: body.eventChat,
+          receiverPhoto: receiverUser.profilePicture,
+          receiverName: receiverUser.name,
           exponentPushToken: receiverUser.pushToken ?? "123",
           title: `Mesazh i ri nga ${senderUser.name}`,
           body: body.payload.message,
@@ -85,7 +88,7 @@ export class NotificationService {
       };
       const pushNotifications = [];
       const pushNotificationBody = {
-        to: receiverUser.pushToken,
+        to: receiverUser.pushToken ?? "123",
         title: `Mesazh i ri nga ${senderUser.name}`,
         body: body.payload.message,
         data: { eventChat: body.eventChat },
@@ -96,88 +99,102 @@ export class NotificationService {
     }
 
     if (body.type === NotificationType.CHAT_TEAM) {
+      const senderId = response.locals.jwt.userId;
       const teamUsersRepository = getRepository(TeamUsers);
+      const teamRepository = getRepository(Team);
+      const team = await teamRepository
+        .createQueryBuilder("t")
+        .where("t.id = :id", { id: body.payload.teamId })
+        .getOne();
       const teamPlayers = await teamUsersRepository
         .createQueryBuilder("teamUser")
         .leftJoinAndSelect("teamUser.player", "user")
         .where("teamUser.teamId = :teamId", { teamId: body.payload.teamId })
         .andWhere("teamUser.status = :status", { status: RequestStatus.CONFIRMED })
+        .andWhere("teamUser.playerId != :playerId", { playerId: senderId })
         .getMany();
-      const senderId = response.locals.jwt.userId;
       const senderName = await userRepository
         .createQueryBuilder("user")
         .select("user.name")
         .where("user.id = :senderId", { senderId })
         .getOne();
-      let notifications = [];
+      const notifications = [];
+      const pushNotifications = [];
       for (const teamPlayer of teamPlayers) {
         const notificationBody = {
           receiverId: teamPlayer.player.id,
           senderId: senderId,
           type: NotificationType.CHAT_TEAM,
           payload: {
-            eventChat: body.eventChat,
+            teamId: body.payload.teamId,
+            teamName: team.name,
+            teamPhoto: team.avatar,
             exponentPushToken: teamPlayer.player.pushToken ?? "123",
-            title: `Mesazh i ri nga ${senderName}`,
+            title: `Mesazh i ri nga ${senderName.name}`,
             body: body.payload.message,
           },
         };
+        const pushNotificationBody = {
+          to: teamPlayer.player.pushToken ?? "123",
+          title: `Mesazh i ri nga ${senderName.name}`,
+          body: body.payload.message,
+          data: { teamId: body.payload.id },
+        };
         notifications.push(notificationBody);
+        pushNotifications.push(pushNotificationBody);
       }
       NotificationService.storeNotification(notifications);
-
-      const tokens = teamPlayers.map((teamPlayer) => teamPlayer.player.pushToken);
-      const pushNotifications = [];
-      const pushNotificationBody = {
-        to: tokens,
-        title: `Mesazh i ri nga ${senderName}`,
-        body: body.payload.message,
-        data: { eventChat: body.eventChat },
-      };
-      pushNotifications.push(pushNotificationBody);
       NotificationService.pushNotification(pushNotifications);
     }
 
     if (body.type === NotificationType.CHAT_EVENT) {
       const requestsRepository = getRepository(Invitation);
+      const eventsRepository = getRepository(Event);
+      const senderId = response.locals.jwt.userId;
+      const event = await eventsRepository
+        .createQueryBuilder("e")
+        .where("e.id = :eventId", { eventId: body.payload.eventId })
+        .getOne();
+
       const eventPlayers = await requestsRepository
         .createQueryBuilder("request")
         .leftJoinAndSelect("request.receiver", "user")
         .where("request.eventId = :eventId", { eventId: body.payload.eventId })
         .andWhere("request.status = :status", { status: RequestStatus.CONFIRMED })
+        .andWhere("request.receiverId != :receiverId", { receiverId: senderId })
         .getMany();
-      const senderId = response.locals.jwt.userId;
       const senderName = await userRepository
         .createQueryBuilder("user")
         .select("user.name")
         .where("user.id = :senderId", { senderId })
         .getOne();
-      let notifications = [];
+      const notifications = [];
+      const pushNotifications = [];
       for (const eventPlayer of eventPlayers) {
         const notificationBody = {
           receiverId: eventPlayer.receiver.id,
           senderId: senderId,
           type: NotificationType.CHAT_EVENT,
           payload: {
-            eventChat: body.eventChat,
-            exponentPushToken: eventPlayer.receiver.pushToken,
-            title: `Mesazh i ri nga ${senderName}`,
+            eventId: body.payload.eventId,
+            eventName: event.name,
+            eventStartDate: event.startDate,
+            eventEndDate: event.endDate,
+            exponentPushToken: eventPlayer.receiver.pushToken ?? "123",
+            title: `Mesazh i ri nga ${senderName.name}`,
             body: body.payload.message,
           },
         };
+        const pushNotificationBody = {
+          to: eventPlayer.receiver.pushToken ?? "123",
+          title: `Mesazh i ri nga ${senderName.name}`,
+          body: body.payload.message,
+          data: { eventId: body.payload.eventId },
+        };
         notifications.push(notificationBody);
+        pushNotifications.push(pushNotificationBody);
       }
       NotificationService.storeNotification(notifications);
-
-      const tokens = eventPlayers.map((eventPlayer) => eventPlayer.receiver.pushToken);
-      const pushNotifications = [];
-      const pushNotificationBody = {
-        to: tokens,
-        title: `Mesazh i ri nga ${senderName}`,
-        body: body.payload.message,
-        data: { eventChat: body.eventChat },
-      };
-      pushNotifications.push(pushNotificationBody);
       NotificationService.pushNotification(pushNotifications);
     }
   };
