@@ -22,6 +22,10 @@ export class NotificationService {
       qb.andWhere("notification.type IN (:...types)", {
         types: [NotificationType.CHAT_EVENT, NotificationType.CHAT_TEAM, NotificationType.CHAT_USER],
       });
+    } else {
+      qb.andWhere("notification.type NOT IN (:...types)", {
+        types: [NotificationType.CHAT_EVENT, NotificationType.CHAT_TEAM, NotificationType.CHAT_USER],
+      });
     }
 
     const myNotifications = await qb.getMany();
@@ -81,6 +85,8 @@ export class NotificationService {
         payload: {
           receiverPhoto: receiverUser.profilePicture,
           receiverName: receiverUser.name,
+          senderPhoto: senderUser.profilePicture,
+          senderName: senderUser.name,
           exponentPushToken: receiverUser.pushToken ?? "123",
           title: `Mesazh i ri nga ${senderUser.name}`,
           body: body.payload.message,
@@ -91,7 +97,13 @@ export class NotificationService {
         to: receiverUser.pushToken ?? "123",
         title: `Mesazh i ri nga ${senderUser.name}`,
         body: body.payload.message,
-        data: { eventChat: body.eventChat },
+        data: {
+          receiverId: receiverUser.id,
+          receiverPhoto: receiverUser.profilePicture,
+          receiverName: receiverUser.name,
+          senderPhoto: senderUser.profilePicture,
+          senderName: senderUser.name,
+        },
       };
       pushNotifications.push(pushNotificationBody);
       NotificationService.storeNotification(notificationBody);
@@ -138,7 +150,7 @@ export class NotificationService {
           to: teamPlayer.player.pushToken ?? "123",
           title: `Mesazh i ri nga ${senderName.name}`,
           body: body.payload.message,
-          data: { teamId: body.payload.id },
+          data: { teamId: body.payload.id, teamName: team.name, teamPhoto: team.avatar },
         };
         notifications.push(notificationBody);
         pushNotifications.push(pushNotificationBody);
@@ -189,7 +201,12 @@ export class NotificationService {
           to: eventPlayer.receiver.pushToken ?? "123",
           title: `Mesazh i ri nga ${senderName.name}`,
           body: body.payload.message,
-          data: { eventId: body.payload.eventId },
+          data: {
+            eventId: body.payload.eventId,
+            eventName: event.name,
+            eventStartDate: event.startDate,
+            eventEndDate: event.endDate,
+          },
         };
         notifications.push(notificationBody);
         pushNotifications.push(pushNotificationBody);
