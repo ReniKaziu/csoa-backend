@@ -1,6 +1,6 @@
 import Axios from "axios";
 import { Request, Response } from "express";
-import { getCustomRepository, getRepository } from "typeorm";
+import { Brackets, getCustomRepository, getRepository } from "typeorm";
 import { Event } from "../../event/entities/event.entity";
 import { Request as Invitation, RequestStatus } from "../../request/entities/request.entity";
 import { Team } from "../../team/entities/team.entity";
@@ -14,22 +14,22 @@ export class NotificationService {
     const notificationRepository = getCustomRepository(NotificationRepository);
     const userId = response.locals.jwt.userId;
 
-    const qb = notificationRepository
+    const queryBuilder = notificationRepository
       .createQueryBuilder("notification")
       .where("notification.receiverId = :userId", { userId })
-      .andWhere("notification.senderId = :userId", { userId });
+      .orWhere("notification.senderId = :userId", { userId });
 
     if (request.query.chats === "true") {
-      qb.andWhere("notification.type IN (:...types)", {
+      queryBuilder.andWhere("notification.type IN (:...types)", {
         types: [NotificationType.CHAT_EVENT, NotificationType.CHAT_TEAM, NotificationType.CHAT_USER],
       });
     } else {
-      qb.andWhere("notification.type NOT IN (:...types)", {
+      queryBuilder.andWhere("notification.type NOT IN (:...types)", {
         types: [NotificationType.CHAT_EVENT, NotificationType.CHAT_TEAM, NotificationType.CHAT_USER],
       });
     }
 
-    const myNotifications = await qb.getMany();
+    const myNotifications = await queryBuilder.getMany();
 
     return myNotifications;
   };
