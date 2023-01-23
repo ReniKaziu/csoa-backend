@@ -16,7 +16,8 @@ export class NotificationService {
 
     const qb = notificationRepository
       .createQueryBuilder("notification")
-      .where("notification.receiverId = :userId", { userId });
+      .where("notification.receiverId = :userId", { userId })
+      .andWhere("notification.senderId = :userId", { userId });
 
     if (request.query.chats === "true") {
       qb.andWhere("notification.type IN (:...types)", {
