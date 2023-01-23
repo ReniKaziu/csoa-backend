@@ -53,7 +53,7 @@ export class UserRouter {
 
     app.put("/users/:userId", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.COMPNAY, UserRole.ADMIN]),
       UserController.putById,
     ]);
 
