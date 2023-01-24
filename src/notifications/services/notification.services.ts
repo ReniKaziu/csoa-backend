@@ -28,6 +28,7 @@ export class NotificationService {
         types: [NotificationType.CHAT_EVENT, NotificationType.CHAT_TEAM, NotificationType.CHAT_USER],
       });
     }
+    queryBuilder.addOrderBy("notification.id", "DESC");
 
     const myNotifications = await queryBuilder.getMany();
 
@@ -126,6 +127,7 @@ export class NotificationService {
         .andWhere("teamUser.status = :status", { status: RequestStatus.CONFIRMED })
         .andWhere("teamUser.playerId != :playerId", { playerId: senderId })
         .getMany();
+
       const senderName = await userRepository
         .createQueryBuilder("user")
         .select("user.name")
