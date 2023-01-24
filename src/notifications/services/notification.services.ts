@@ -151,7 +151,7 @@ export class NotificationService {
           to: teamPlayer.player.pushToken ?? "123",
           title: `Mesazh i ri nga ${senderName.name}`,
           body: body.payload.message,
-          data: { teamId: body.payload.id, teamName: team.name, teamPhoto: team.avatar },
+          data: { teamId: body.payload.teamId, teamName: team.name, teamPhoto: team.avatar },
         };
         notifications.push(notificationBody);
         pushNotifications.push(pushNotificationBody);
