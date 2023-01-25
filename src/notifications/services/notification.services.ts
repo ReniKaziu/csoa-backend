@@ -120,6 +120,7 @@ export class NotificationService {
         .createQueryBuilder("t")
         .where("t.id = :id", { id: body.payload.teamId })
         .getOne();
+      const teamPhoto = team?.avatar ? team?.avatar?.split("/").pop() : "";
       const teamPlayers = await teamUsersRepository
         .createQueryBuilder("teamUser")
         .leftJoinAndSelect("teamUser.player", "user")
@@ -153,7 +154,7 @@ export class NotificationService {
           to: teamPlayer.player.pushToken ?? "123",
           title: `Mesazh i ri nga ${senderName.name}`,
           body: body.payload.message,
-          data: { teamId: body.payload.teamId, teamName: team.name, teamPhoto: team.avatar },
+          data: { teamId: body.payload.teamId, teamName: team.name, teamPhoto },
         };
         notifications.push(notificationBody);
         pushNotifications.push(pushNotificationBody);
