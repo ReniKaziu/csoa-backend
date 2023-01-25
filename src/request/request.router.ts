@@ -6,7 +6,7 @@ import { RequestController } from "./controller/request.controller";
 
 export class RequestRouter {
   static configRoutes = (app: express.Application) => {
-    app.get("/possible-users/event/:eventId", [
+    app.post("/possible-users/event/:eventId", [
       AuthenticationMiddleware.checkJwtToken,
       PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
       RequestController.listPossibleUsersForEvent,
@@ -54,7 +54,7 @@ export class RequestRouter {
       RequestController.teamRequestToEnter,
     ]);
 
-    app.get("/possible-teams/event/:eventId", [
+    app.post("/possible-teams/event/:eventId", [
       AuthenticationMiddleware.checkJwtToken,
       PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
       RequestController.listPossibleTeamsForEvent,
