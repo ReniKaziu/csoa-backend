@@ -144,7 +144,7 @@ export class NotificationService {
           payload: {
             teamId: body.payload.teamId,
             teamName: team.name,
-            teamPhoto: team.avatar,
+            teamPhoto,
             exponentPushToken: teamPlayer.player.pushToken ?? "123",
             title: `Mesazh i ri nga ${senderName.name}`,
             body: body.payload.message,
