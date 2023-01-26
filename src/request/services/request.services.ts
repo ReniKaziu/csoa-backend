@@ -83,7 +83,7 @@ export class RequestService {
       .createQueryBuilder("request")
       .innerJoinAndSelect("request.receiver", "receiver")
       .where("request.eventId = :eventId", { eventId: event.id })
-      .andWhere("request.senderId != request.receiverId")
+      // .andWhere("request.senderId != request.receiverId")
       .getMany();
 
     return requests;
