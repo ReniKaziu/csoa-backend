@@ -1,11 +1,4 @@
-import {
-  Column,
-  Entity,
-  ManyToMany,
-  ManyToOne,
-  OneToMany,
-  Unique,
-} from "typeorm";
+import { Column, Entity, ManyToMany, ManyToOne, OneToMany, Unique } from "typeorm";
 import { Attachment } from "../../attachment/entities/attachment.entity";
 import { Common } from "../../common/entities/common";
 import { Complex } from "../../complex/entities/complex.entity";
@@ -61,6 +54,9 @@ export class User extends Common {
 
   @Column("timestamp", { nullable: false, name: "birthday" })
   public birthday: Date;
+
+  @Column("timestamp", { nullable: true, name: "last_seen" })
+  public lastSeen: Date;
 
   @Column("json", { nullable: false, name: "sports" })
   public sports: string;
@@ -121,6 +117,7 @@ export class User extends Common {
       profilePicture: this.profilePicture,
       email: this.email,
       pushToken: this.pushToken,
+      lastSeen: this.lastSeen,
       role: this.role,
     };
   }
