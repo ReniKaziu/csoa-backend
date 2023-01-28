@@ -20,10 +20,13 @@ export class EventService {
   static listMyEvents = async (request: Request, response: Response) => {
     const eventsRepository = getCustomRepository(EventRepository);
     const teamUsersRepository = getRepository(TeamUsers);
+
     const date = Functions.getCurrentDateTime();
     let twoDaysLater = Functions.formatTwoDaysLaterDate(new Date());
     const userId = +response.locals.jwt.userId;
     const user = await UserService.findOne(userId);
+    const age = Functions.getAge(user.birthday);
+
     let mySports = [];
     for (const sport in user.sports as any) {
       if (user.sports[sport].picked) {
@@ -97,6 +100,9 @@ export class EventService {
       .andWhere("event.startDate > :todayStart", {
         todayStart: date,
       })
+      .andWhere("event.minAge < :age", { age })
+      .andWhere("event.maxAge > :age", { age })
+      .andWhere("complex.city = :userCity", { userCity: user.address })
       .andWhere(
         new Brackets((qb) => {
           qb.where("request.receiverId != :receiverId", {
@@ -381,6 +387,13 @@ export class EventService {
           .getRawOne();
 
         if (!overlappingEvent) {
+          let minAge = 0;
+          let maxAge = 0;
+          if (playersAge) {
+            const [minimumAge, maximumAge] = playersAge.split("-");
+            minAge = minimumAge;
+            maxAge = maximumAge;
+          }
           const event = new CreateEventDto();
           event.startDate = incrementedStartDate;
           event.endDate = incrementedEndDate;
@@ -399,6 +412,8 @@ export class EventService {
           event.playersNumber = playersNumber;
           event.level = level;
           event.organiserTeamId = organiserTeamId ?? null;
+          event.minAge = minAge;
+          event.maxAge = maxAge;
           eventsToBeInserted.push(event);
         }
         if ((isWeekly && eventsToBeInserted.length === 12) || (!isWeekly && eventsToBeInserted.length === 1)) {
@@ -504,7 +519,11 @@ export class EventService {
   static findById = async (eventId: number, withDeleted: boolean) => {
     const eventRepository = getCustomRepository(EventRepository);
 
-    const qb = eventRepository.createQueryBuilder("event").where("event.id = :id", { id: eventId });
+    const qb = eventRepository
+      .createQueryBuilder("event")
+      .leftJoinAndSelect("event.location", "location")
+      .leftJoinAndSelect("location.complex", "complex")
+      .where("event.id = :id", { id: eventId });
 
     if (withDeleted) {
       qb.withDeleted();

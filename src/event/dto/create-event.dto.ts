@@ -23,6 +23,12 @@ export class CreateEventDto {
   name: string;
 
   @IsOptional()
+  minAge?: number;
+
+  @IsOptional()
+  maxAge?: number;
+
+  @IsOptional()
   notes: string;
 
   @IsOptional()

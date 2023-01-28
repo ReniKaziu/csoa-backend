@@ -24,7 +24,10 @@ export class RequestService {
       .createQueryBuilder("user")
       .leftJoinAndSelect("user.receivedReviews", "review")
       .where(`user.sports LIKE '%"${sport}": {"picked": true%'`)
-      .andWhere(`user.id NOT IN (select receiverId from requests where eventId = ${event.id} )`);
+      .andWhere(`user.id NOT IN (select receiverId from requests where eventId = ${event.id} )`)
+      .andWhere("user.address = :eventCity", { eventCity: event.location.complex.city })
+      .andWhere("(year(CURRENT_TIMESTAMP) - year(user.birthday)) >= :eventMinAge", { eventMinAge: event.minAge })
+      .andWhere("(year(CURRENT_TIMESTAMP) - year(user.birthday)) <= :eventMaxAge", { eventMaxAge: event.maxAge });
 
     let userQb = `(user.sports `;
 
@@ -297,12 +300,15 @@ export class RequestService {
 
     const possibleTeams = teamsRepository
       .createQueryBuilder("team")
+      .leftJoinAndSelect("team.user", "user")
       .where("team.sport = :sport", { sport: sportsMapped[sport] })
       .andWhere("team.isDummy = false")
       .andWhere("team.id != :organiserTeamId", {
         organiserTeamId: event.organiserTeamId,
       })
-      .andWhere("team.id NOT IN (:...invitedTeams)", { invitedTeams: invitedTeamIds });
+      .andWhere("team.id NOT IN (:...invitedTeams)", { invitedTeams: invitedTeamIds })
+      .andWhere(`team.ageRange LIKE '%${event.playersAge}%'`)
+      .andWhere("user.address = :complexCity", { complexCity: event.location.complex.city });
 
     if (request.body.level) {
       possibleTeams.andWhere("team.level = :level", {
