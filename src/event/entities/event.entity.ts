@@ -6,6 +6,7 @@ import { EventTeamUsers } from "./event.team.users.entity";
 import { Location } from "../../complex/entities/location.entity";
 import { Request } from "../../request/entities/request.entity";
 import { WeeklyEventGroup } from "./weekly.event.group.entity";
+import { Notification } from "../../notifications/entities/notification.entity";
 
 export enum EventStatus {
   DRAFT = "draft",
@@ -154,6 +155,9 @@ export class Event extends Common {
 
   @OneToMany(() => Request, (request) => request.event)
   eventRequests: Request[];
+
+  @OneToMany(() => Notification, (notification) => notification.event)
+  notifications: Notification[];
 
   @Index()
   @Column("tinyint")

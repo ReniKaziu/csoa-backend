@@ -1,6 +1,8 @@
 import { Column, Entity, ManyToOne } from "typeorm";
 import { Common } from "../../common/entities/common";
 import { Complex } from "../../complex/entities/complex.entity";
+import { Event } from "../../event/entities/event.entity";
+import { Team } from "../../team/entities/team.entity";
 import { User } from "../../user/entities/user.entity";
 
 export enum NotificationType {
@@ -52,12 +54,38 @@ export class Notification extends Common {
   })
   public type: string;
 
+  @Column("varchar", {
+    nullable: true,
+    name: "sent_ids",
+  })
+  public sentIds: string;
+
+  @Column("varchar", {
+    nullable: true,
+    name: "read_ids",
+  })
+  public readIds: string;
+
   @ManyToOne(() => Complex, (complex) => complex.notifications)
   public complex: Complex;
   @Column("int", {
     nullable: true,
   })
   complexId: number;
+
+  @ManyToOne(() => Team, (team) => team.notifications)
+  public team: Team;
+  @Column("int", {
+    nullable: true,
+  })
+  teamId: number;
+
+  @ManyToOne(() => Event, (event) => event.notifications)
+  public event: Event;
+  @Column("int", {
+    nullable: true,
+  })
+  eventId: number;
 
   @ManyToOne(() => User, (user) => user.givenNotifications)
   public sender: User;
@@ -72,4 +100,21 @@ export class Notification extends Common {
     nullable: true,
   })
   receiverId: number;
+
+  get toResponse() {
+    return {
+      id: this.id,
+      tsCreated: this.tsCreated,
+      tsLastModified: this.tsLastModified,
+      tsDeleted: this.tsDeleted,
+      isRead: this.isRead,
+      payload: this.payload,
+      type: this.type,
+      sentIds: JSON.parse(this.sentIds),
+      readIds: JSON.parse(this.readIds),
+      complexId: this.complexId,
+      senderId: this.senderId,
+      receiverId: this.receiverId,
+    };
+  }
 }

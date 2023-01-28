@@ -32,7 +32,7 @@ export class NotificationService {
 
     const myNotifications = await queryBuilder.getMany();
 
-    return myNotifications;
+    return myNotifications.map((n) => n.toResponse);
   };
 
   static listMyComplexNotifications = async (request: Request, response: Response) => {
@@ -67,161 +67,233 @@ export class NotificationService {
   };
 
   static pushChatNotification = async (request: Request, response: Response) => {
-    const userRepository = getRepository(User);
-    const body = request.body;
-    if (body.type === NotificationType.CHAT_USER) {
-      const receiverId = body.payload.userId;
-      const senderId = response.locals.jwt.userId;
-      const receiverUser = await userRepository
-        .createQueryBuilder("user")
-        .where("user.id = :receiverId", { receiverId })
-        .getOne();
-      const senderUser = await userRepository
-        .createQueryBuilder("user")
-        .where("user.id = :senderId", { senderId })
-        .getOne();
-      const notificationBody = {
-        receiverId: receiverUser.id,
-        senderId: senderUser.id,
-        type: NotificationType.CHAT_USER,
-        payload: {
-          receiverPhoto: receiverUser.profilePicture,
-          receiverName: receiverUser.name,
-          senderPhoto: senderUser.profilePicture,
-          senderName: senderUser.name,
-          exponentPushToken: receiverUser.pushToken ?? "123",
+    try {
+      const userRepository = getRepository(User);
+      const body = request.body;
+      if (body.type === NotificationType.CHAT_USER) {
+        const receiverId = body.payload.userId;
+        const senderId = response.locals.jwt.userId;
+        const sentIds = [];
+        const readIds = [];
+        sentIds.push(senderId, +receiverId);
+        readIds.push(senderId);
+        const receiverUser = await userRepository
+          .createQueryBuilder("user")
+          .where("user.id = :receiverId", { receiverId })
+          .getOne();
+        const senderUser = await userRepository
+          .createQueryBuilder("user")
+          .where("user.id = :senderId", { senderId })
+          .getOne();
+        const notificationBody = {
+          receiverId: receiverUser.id,
+          senderId: senderUser.id,
+          type: NotificationType.CHAT_USER,
+          sentIds: JSON.stringify(sentIds),
+          readIds: JSON.stringify(readIds),
+          payload: {
+            receiverPhoto: receiverUser.profilePicture,
+            receiverName: receiverUser.name,
+            senderPhoto: senderUser.profilePicture,
+            senderName: senderUser.name,
+            exponentPushToken: receiverUser.pushToken ?? "123",
+            title: `Mesazh i ri nga ${senderUser.name}`,
+            body: body.payload.message,
+          },
+        };
+        const pushNotifications = [];
+        const pushNotificationBody = {
+          to: receiverUser.pushToken ?? "123",
           title: `Mesazh i ri nga ${senderUser.name}`,
           body: body.payload.message,
-        },
-      };
-      const pushNotifications = [];
-      const pushNotificationBody = {
-        to: receiverUser.pushToken ?? "123",
-        title: `Mesazh i ri nga ${senderUser.name}`,
-        body: body.payload.message,
-        data: {
-          receiverId: receiverUser.id,
-          receiverPhoto: receiverUser.profilePicture,
-          receiverName: receiverUser.name,
-          senderPhoto: senderUser.profilePicture,
-          senderName: senderUser.name,
-        },
-      };
-      pushNotifications.push(pushNotificationBody);
-      NotificationService.storeNotification(notificationBody);
-      NotificationService.pushNotification(pushNotifications);
-    }
+          data: {
+            receiverId: receiverUser.id,
+            receiverPhoto: receiverUser.profilePicture,
+            receiverName: receiverUser.name,
+            senderPhoto: senderUser.profilePicture,
+            senderName: senderUser.name,
+          },
+        };
+        const notifications = [];
+        notifications.push(notificationBody);
+        pushNotifications.push(pushNotificationBody);
+        NotificationService.storeNotification(notifications);
+        NotificationService.pushNotification(pushNotifications);
+      }
 
-    if (body.type === NotificationType.CHAT_TEAM) {
-      const senderId = response.locals.jwt.userId;
-      const teamUsersRepository = getRepository(TeamUsers);
-      const teamRepository = getRepository(Team);
-      const team = await teamRepository
-        .createQueryBuilder("t")
-        .where("t.id = :id", { id: body.payload.teamId })
-        .getOne();
-      const teamPhoto = team?.avatar ? team?.avatar?.split("/").pop() : "";
-      const teamPlayers = await teamUsersRepository
-        .createQueryBuilder("teamUser")
-        .leftJoinAndSelect("teamUser.player", "user")
-        .where("teamUser.teamId = :teamId", { teamId: body.payload.teamId })
-        .andWhere("teamUser.status = :status", { status: RequestStatus.CONFIRMED })
-        .andWhere("teamUser.playerId != :playerId", { playerId: senderId })
-        .getMany();
+      if (body.type === NotificationType.CHAT_TEAM) {
+        const senderId = response.locals.jwt.userId;
+        const teamUsersRepository = getRepository(TeamUsers);
+        const teamRepository = getRepository(Team);
+        const team = await teamRepository
+          .createQueryBuilder("t")
+          .where("t.id = :id", { id: body.payload.teamId })
+          .getOne();
+        const teamPhoto = team?.avatar ? team?.avatar?.split("/").pop() : "";
+        const teamPlayers = await teamUsersRepository
+          .createQueryBuilder("teamUser")
+          .leftJoinAndSelect("teamUser.player", "user")
+          .where("teamUser.teamId = :teamId", { teamId: body.payload.teamId })
+          .andWhere("teamUser.status = :status", { status: RequestStatus.CONFIRMED })
+          // .andWhere("teamUser.playerId != :playerId", { playerId: senderId })
+          .getMany();
 
-      const senderName = await userRepository
-        .createQueryBuilder("user")
-        .select("user.name")
-        .where("user.id = :senderId", { senderId })
-        .getOne();
-      const notifications = [];
-      const pushNotifications = [];
-      for (const teamPlayer of teamPlayers) {
+        const senderName = await userRepository
+          .createQueryBuilder("user")
+          .select("user.name")
+          .where("user.id = :senderId", { senderId })
+          .getOne();
+        const sentIds = [];
+        const notifications = [];
+        const pushNotifications = [];
+        for (const teamPlayer of teamPlayers) {
+          sentIds.push(teamPlayer.playerId);
+          if (teamPlayer.playerId !== senderId) {
+            const pushNotificationBody = {
+              to: teamPlayer.player.pushToken ?? "123",
+              title: `Mesazh i ri nga ${senderName.name}`,
+              body: body.payload.message,
+              data: { teamId: body.payload.teamId, teamName: team.name, teamPhoto },
+            };
+            pushNotifications.push(pushNotificationBody);
+          }
+        }
         const notificationBody = {
-          receiverId: teamPlayer.player.id,
           senderId: senderId,
+          teamId: body.payload.teamId,
           type: NotificationType.CHAT_TEAM,
+          sentIds: JSON.stringify(sentIds),
+          readIds: JSON.stringify([senderId]),
           payload: {
             teamId: body.payload.teamId,
             teamName: team.name,
             teamPhoto,
-            exponentPushToken: teamPlayer.player.pushToken ?? "123",
             title: `Mesazh i ri nga ${senderName.name}`,
             body: body.payload.message,
           },
         };
-        const pushNotificationBody = {
-          to: teamPlayer.player.pushToken ?? "123",
-          title: `Mesazh i ri nga ${senderName.name}`,
-          body: body.payload.message,
-          data: { teamId: body.payload.teamId, teamName: team.name, teamPhoto },
-        };
         notifications.push(notificationBody);
-        pushNotifications.push(pushNotificationBody);
+        NotificationService.storeNotification(notifications);
+        NotificationService.pushNotification(pushNotifications);
       }
-      NotificationService.storeNotification(notifications);
-      NotificationService.pushNotification(pushNotifications);
-    }
 
-    if (body.type === NotificationType.CHAT_EVENT) {
-      const requestsRepository = getRepository(Invitation);
-      const eventsRepository = getRepository(Event);
-      const senderId = response.locals.jwt.userId;
-      const event = await eventsRepository
-        .createQueryBuilder("e")
-        .where("e.id = :eventId", { eventId: body.payload.eventId })
-        .getOne();
+      if (body.type === NotificationType.CHAT_EVENT) {
+        const requestsRepository = getRepository(Invitation);
+        const eventsRepository = getRepository(Event);
+        const senderId = response.locals.jwt.userId;
+        const event = await eventsRepository
+          .createQueryBuilder("e")
+          .where("e.id = :eventId", { eventId: body.payload.eventId })
+          .getOne();
 
-      const eventPlayers = await requestsRepository
-        .createQueryBuilder("request")
-        .leftJoinAndSelect("request.receiver", "user")
-        .where("request.eventId = :eventId", { eventId: body.payload.eventId })
-        .andWhere("request.status = :status", { status: RequestStatus.CONFIRMED })
-        .andWhere("request.receiverId != :receiverId", { receiverId: senderId })
-        .getMany();
-      const senderName = await userRepository
-        .createQueryBuilder("user")
-        .select("user.name")
-        .where("user.id = :senderId", { senderId })
-        .getOne();
-      const notifications = [];
-      const pushNotifications = [];
-      for (const eventPlayer of eventPlayers) {
+        const eventPlayers = await requestsRepository
+          .createQueryBuilder("request")
+          .leftJoinAndSelect("request.receiver", "user")
+          .where("request.eventId = :eventId", { eventId: body.payload.eventId })
+          .andWhere("request.status = :status", { status: RequestStatus.CONFIRMED })
+          .getMany();
+        const senderName = await userRepository
+          .createQueryBuilder("user")
+          .select("user.name")
+          .where("user.id = :senderId", { senderId })
+          .getOne();
+        const sentIds = [];
+        const notifications = [];
+        const pushNotifications = [];
+        for (const eventPlayer of eventPlayers) {
+          sentIds.push(eventPlayer.receiverId);
+          if (eventPlayer.receiverId !== senderId) {
+            const pushNotificationBody = {
+              to: eventPlayer.receiver.pushToken ?? "123",
+              title: `Mesazh i ri nga ${senderName.name}`,
+              body: body.payload.message,
+              data: {
+                eventId: body.payload.eventId,
+                eventName: event.name,
+                eventStartDate: event.startDate,
+                eventEndDate: event.endDate,
+              },
+            };
+            pushNotifications.push(pushNotificationBody);
+          }
+        }
         const notificationBody = {
-          receiverId: eventPlayer.receiver.id,
           senderId: senderId,
+          eventId: body.payload.eventId,
+          sentIds: JSON.stringify(sentIds),
+          readIds: JSON.stringify([senderId]),
           type: NotificationType.CHAT_EVENT,
           payload: {
             eventId: body.payload.eventId,
             eventName: event.name,
             eventStartDate: event.startDate,
             eventEndDate: event.endDate,
-            exponentPushToken: eventPlayer.receiver.pushToken ?? "123",
             title: `Mesazh i ri nga ${senderName.name}`,
             body: body.payload.message,
           },
         };
-        const pushNotificationBody = {
-          to: eventPlayer.receiver.pushToken ?? "123",
-          title: `Mesazh i ri nga ${senderName.name}`,
-          body: body.payload.message,
-          data: {
-            eventId: body.payload.eventId,
-            eventName: event.name,
-            eventStartDate: event.startDate,
-            eventEndDate: event.endDate,
-          },
-        };
         notifications.push(notificationBody);
-        pushNotifications.push(pushNotificationBody);
+        NotificationService.storeNotification(notifications);
+        NotificationService.pushNotification(pushNotifications);
       }
-      NotificationService.storeNotification(notifications);
-      NotificationService.pushNotification(pushNotifications);
+      return "Success";
+    } catch (err) {
+      console.log(err);
     }
   };
 
   static storeNotification = async (payload) => {
     const notificationRepository = getCustomRepository(NotificationRepository);
+    if (payload[0]?.type === NotificationType.CHAT_USER) {
+      const senderId = payload[0].senderId;
+      const receiverId = payload[0].receiverId;
+      const foundMessage = await notificationRepository
+        .createQueryBuilder("n")
+        .where(
+          new Brackets((qb) =>
+            qb.where("n.senderId = :senderId", { senderId }).andWhere("n.receiverId = :receiverId", { receiverId })
+          )
+        )
+        .orWhere(
+          new Brackets((qb) => {
+            qb.where("n.senderId = :receiverId", { receiverId }).andWhere("n.receiverId = :senderId", { senderId });
+          })
+        )
+        .getOne();
+      if (foundMessage) {
+        await notificationRepository
+          .createQueryBuilder("n")
+          .update(foundMessage as any, payload[0])
+          .execute();
+        return "Notification successfully updated";
+      }
+    }
+    if (payload[0]?.type === NotificationType.CHAT_TEAM) {
+      const foundTeamMessage = await notificationRepository
+        .createQueryBuilder("n")
+        .where("n.teamId = :teamId", { teamId: payload[0].payload.teamId })
+        .getOne();
+      if (foundTeamMessage) {
+        await notificationRepository
+          .createQueryBuilder("n")
+          .update(foundTeamMessage as any, payload[0])
+          .execute();
+        return "Notification succesfully updated";
+      }
+    }
+    if (payload[0]?.type === NotificationType.CHAT_EVENT) {
+      const foundEventMessage = await notificationRepository
+        .createQueryBuilder("n")
+        .where("n.eventId = :eventId", { eventId: payload[0].payload.eventId })
+        .getOne();
+      if (foundEventMessage) {
+        await notificationRepository
+          .createQueryBuilder("n")
+          .update(foundEventMessage as any, payload[0])
+          .execute();
+        return "Notification succesfully updated";
+      }
+    }
     await notificationRepository.createQueryBuilder("notification").insert().values(payload).execute();
     return "Notification successfully created!";
   };
