@@ -115,6 +115,8 @@ export class Notification extends Common {
       complexId: this.complexId,
       senderId: this.senderId,
       receiverId: this.receiverId,
+      eventId: this.eventId,
+      teamId: this.teamId,
     };
   }
 }
