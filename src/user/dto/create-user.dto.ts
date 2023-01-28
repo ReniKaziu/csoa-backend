@@ -27,4 +27,7 @@ export class CreateUserDto {
 
   @IsOptional()
   pushToken: string;
+
+  @IsOptional()
+  lastSeen: string;
 }

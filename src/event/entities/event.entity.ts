@@ -42,6 +42,14 @@ export class Event extends Common {
   @Column("timestamp", { nullable: true, name: "endDate" })
   public endDate: Date;
 
+  @Index()
+  @Column("int", { nullable: true, name: "minAge" })
+  public minAge: number;
+
+  @Index()
+  @Column("int", { nullable: true, name: "maxAge" })
+  public maxAge: number;
+
   @Column("tinyint", { nullable: true, name: "isDraft" })
   public isDraft: boolean;
 
@@ -186,6 +194,8 @@ export class Event extends Common {
       isUserReservation: this.isUserReservation,
       deletedById: this.deletedById,
       weeklyGroupedId: this.weeklyGroupedId,
+      minAge: this.minAge,
+      maxAge: this.maxAge,
     };
   }
 

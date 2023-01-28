@@ -192,6 +192,7 @@ export class UserService {
     updateUserDto.phoneNumber = userPayload.phoneNumber;
     updateUserDto.sex = userPayload.sex;
     updateUserDto.pushToken = userPayload.pushToken;
+    updateUserDto.lastSeen = userPayload.lastSeen;
 
     const finalUser = userRepository.merge(currentUser, updateUserDto);
     await userRepository.save(finalUser);

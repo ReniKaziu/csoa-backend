@@ -55,8 +55,8 @@ export class User extends Common {
   @Column("timestamp", { nullable: false, name: "birthday" })
   public birthday: Date;
 
-  @Column("timestamp", { nullable: true, name: "last_seen" })
-  public lastSeen: Date;
+  @Column("varchar", { nullable: true, name: "last_seen" })
+  public lastSeen: string;
 
   @Column("json", { nullable: false, name: "sports" })
   public sports: string;
