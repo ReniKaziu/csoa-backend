@@ -34,8 +34,8 @@ export class RequestService {
     if (request.body.positions?.length) {
       request.body.positions.forEach((position, _index) => {
         if (_index === 0) {
-          userQb += `LIKE '%${position}%' `;
-        } else userQb += ` OR '%${position}%' `;
+          userQb += `LIKE '%${sport}-${position}%' `;
+        } else userQb += ` OR '%${sport}-${position}%' `;
       });
       userQb += ")";
       possibleUsers.andWhere(userQb);
@@ -43,7 +43,8 @@ export class RequestService {
 
     if (request.body.level) {
       const level = request.body.level;
-      possibleUsers.andWhere(`user.sports LIKE '%${level}%'`);
+
+      possibleUsers.andWhere(`user.sports LIKE '%${sport}-${level}%'`);
     }
 
     if (request.body.rating) {

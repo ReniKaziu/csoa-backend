@@ -70,6 +70,13 @@ export class UserService {
 
     // if (!isValid.length) throw "Code not valid or expired";
 
+    for (const sport in userPayload["sports"]) {
+      if (userPayload["sports"][sport]["picked"]) {
+        userPayload["sports"][sport]["positionMapped"] = `${sport}-${userPayload["sports"][sport]["position"]}`;
+        userPayload["sports"][sport]["experienceMapped"] = `${sport}-${userPayload["sports"][sport]["experience"]}`;
+      }
+    }
+
     const user = userRepository.create({
       ...userPayload,
       password: Md5.init(userPayload.password),
@@ -87,7 +94,6 @@ export class UserService {
         review.senderId = created["id"];
         review.sport = sport;
         review.value = created["sports"][sport].rating;
-        console.log({ review });
         reviews.push(review);
       }
     }
@@ -214,6 +220,9 @@ export class UserService {
       for (const key in user.sports[sport]) {
         if (user.sports[sport][key] !== sportsPayload[sport][key]) {
           user.sports[sport][key] = sportsPayload[sport][key];
+          user.sports[sport]["positionMapped"] = `${sport}-${sportsPayload[sport]["position"]}`;
+          user.sports[sport]["experienceMapped"] = `${sport}-${sportsPayload[sport]["experience"]}`;
+
           if (key === "rating") {
             const reviewRepository = getRepository(Review);
             await reviewRepository.update(
@@ -221,6 +230,7 @@ export class UserService {
               { value: sportsPayload[sport][key] }
             );
           }
+
           if (key === "picked") {
             if (sportsPayload[sport][key] === false) {
               await UserService.deleteReviewsAndTeams(user, sport);
