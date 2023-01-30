@@ -1,6 +1,6 @@
 import { UserRepository } from "../repositories/user.repository";
 import { QueryStringProcessor } from "../../common/utilities/QueryStringProcessor";
-import { FileLogger, getCustomRepository, getRepository } from "typeorm";
+import { Brackets, getCustomRepository, getManager, getRepository, In } from "typeorm";
 import { UserRole } from "../utilities/UserRole";
 import { Md5 } from "md5-typescript";
 import { User } from "../entities/user.entity";
@@ -17,6 +17,9 @@ import { UpdateUserDto } from "../dto/update-user.dto";
 import { File } from "../../common/utilities/File";
 import { Review } from "../../review/entities/review.entity";
 import { TeamUsers } from "../../team/entities/team.users.entity";
+import { Team } from "../../team/entities/team.entity";
+import { Event, EventStatus } from "../../event/entities/event.entity";
+import { Request as Invitations, RequestStatus } from "../../request/entities/request.entity";
 const UUID = require("uuid/v1");
 
 const accountSid = "ACd684d7d904d8ca841081b583bd0eb4d9";
@@ -207,11 +210,88 @@ export class UserService {
   };
 
   static deactivate = async (currentUser: User) => {
-    const userRepository = getCustomRepository(UserRepository);
+    const queryRunner = getManager().connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      const futureCreatorEvent = await queryRunner.manager
+        .createQueryBuilder(Event, "e")
+        .where("e.creatorId = :id", { id: currentUser.id })
+        .andWhere("e.startDate > :now", { now: new Date() })
+        .andWhere("e.status IN (:...statuses)", {
+          statuses: [EventStatus.CONFIRMED, EventStatus.WAITING_FOR_CONFIRMATION],
+        })
+        .getOne();
+      if (futureCreatorEvent) {
+        throw new Error(`Perdoruesi nuk mund te caktivizohet sepse ka evente ne te ardhmen!`);
+      }
 
-    await userRepository.update({ id: currentUser.id }, { tsDeleted: new Date() });
+      // Delete user from other teams
+      await queryRunner.manager
+        .createQueryBuilder(TeamUsers, "tu")
+        .delete()
+        .where("teams_users.playerId = :playerId", { playerId: currentUser.id })
+        .execute();
 
-    return "Perdoruesi u caktivizua";
+      const teamCreator = await queryRunner.manager.find(Team, { where: { userId: currentUser.id } });
+      if (teamCreator) {
+        const teamIds = teamCreator.map((team) => team.id);
+        const futureTeamEvents = await queryRunner.manager
+          .createQueryBuilder(Event, "e")
+          .where(
+            new Brackets((qb) =>
+              qb
+                .where("e.organiserTeamId IN (:...teamIds)", { teamIds })
+                .orWhere("e.receiverTeamId IN (:...teamIds)", { teamIds })
+            )
+          )
+          .andWhere("e.status IN (:...statuses)", {
+            statuses: [EventStatus.CONFIRMED, EventStatus.WAITING_FOR_CONFIRMATION],
+          })
+          .andWhere("e.startDate > :now", { now: new Date() })
+          .getMany();
+        if (futureTeamEvents) {
+          throw new Error(`Perdoruesi nuk mund te caktivizohet sepse ka evente ne te ardhmen!`);
+        }
+        const teamPlayers = await queryRunner.manager.find(TeamUsers, { where: { teamId: In(teamIds) } });
+        if (teamPlayers && teamPlayers.length) {
+          const teamPlayersIds = teamPlayers.map((tu) => tu.id);
+          // Delete players of creators' teams and creators' teams
+          await queryRunner.manager.delete("teams_users", teamPlayersIds);
+          await queryRunner.manager.delete("teams", teamIds);
+        }
+      }
+
+      // Delete invitations to events
+      await queryRunner.manager
+        .createQueryBuilder(Invitations, "r")
+        .delete()
+        .where("requests.receiverId = :id", { id: currentUser.id })
+        .andWhere("requests.status IN (:...statuses)", {
+          statuses: [RequestStatus.CONFIRMED, RequestStatus.WAITING_FOR_CONFIRMATION],
+        })
+        .execute();
+
+      // Delete sent and received reviews
+      await queryRunner.manager
+        .createQueryBuilder(Review, "r")
+        .delete()
+        .where("reviews.receiverId = :id", { id: currentUser.id })
+        .orWhere("reviews.senderId = :id", { id: currentUser.id })
+        .execute();
+
+      // Soft delete user
+      await queryRunner.manager.softDelete("users", currentUser.id);
+
+      await queryRunner.commitTransaction();
+      return "Perdoruesi u caktivizua";
+    } catch (err) {
+      console.log(err);
+      await queryRunner.rollbackTransaction();
+      return err.message;
+    } finally {
+      await queryRunner.release();
+    }
   };
 
   static updateSport = async (sportsPayload, user: User) => {
