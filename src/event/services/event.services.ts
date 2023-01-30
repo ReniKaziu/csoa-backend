@@ -822,6 +822,11 @@ export class EventService {
       if (overlapping) {
         throw new Error();
       } else {
+        if (playersAge !== currentEvent.playersAge) {
+          const [minimumAge, maximumAge] = playersAge.split("-");
+          eventPayload.minAge = minimumAge;
+          eventPayload.maxAge = maximumAge;
+        }
         const mergedEvent = queryRunner.manager.merge(Event, currentEvent, eventPayload);
         updatedEvent = await queryRunner.manager.save(mergedEvent);
         await queryRunner.commitTransaction();
