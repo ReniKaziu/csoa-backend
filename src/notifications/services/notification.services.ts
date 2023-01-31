@@ -61,9 +61,13 @@ export class NotificationService {
   static updateNotification = async (notification: Notification) => {
     const notificationRepository = getRepository(Notification);
 
-    const updatedNotification = await notificationRepository.update(notification, { isRead: true });
-
-    return updatedNotification;
+    return await notificationRepository
+      .createQueryBuilder()
+      .from(Notification, "n")
+      .update()
+      .set({ isRead: true })
+      .where("n.id = :id", { id: notification.id })
+      .execute();
   };
 
   static pushChatNotification = async (request: Request, response: Response) => {
