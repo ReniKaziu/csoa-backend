@@ -584,8 +584,6 @@ export class EventService {
           .getMany();
 
         if (startDate !== currentEvent.startDate.toISOString()) {
-          console.log("different date");
-
           for (const [i, event] of remainedEvents.entries()) {
             const incrementedStartDate = EventService.addDays(startDate, i);
             const incrementedEndDate = EventService.addDays(endDate, i);
@@ -631,8 +629,6 @@ export class EventService {
             }
           }
         } else {
-          console.log("same date");
-
           for (const event of remainedEvents) {
             event.name = name;
             // event.notes = notes;

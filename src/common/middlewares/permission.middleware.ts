@@ -125,8 +125,6 @@ export class PermissionMiddleware {
   static checkIfTeamCreator = async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = res.locals.jwt;
     const teamId = req.params.teamId;
-    console.log({ teamId });
-    console.log({ userId });
 
     const team = await getRepository(Team)
       .createQueryBuilder("t")

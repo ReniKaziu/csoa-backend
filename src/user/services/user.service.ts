@@ -234,7 +234,7 @@ export class UserService {
         .execute();
 
       const teamCreator = await queryRunner.manager.find(Team, { where: { userId: currentUser.id } });
-      if (teamCreator) {
+      if (teamCreator && teamCreator.length) {
         const teamIds = teamCreator.map((team) => team.id);
         const futureTeamEvents = await queryRunner.manager
           .createQueryBuilder(Event, "e")
