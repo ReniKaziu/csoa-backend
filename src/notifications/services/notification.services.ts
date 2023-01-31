@@ -61,13 +61,19 @@ export class NotificationService {
   static updateNotification = async (notification: Notification) => {
     const notificationRepository = getRepository(Notification);
 
-    return await notificationRepository
-      .createQueryBuilder()
-      .from(Notification, "n")
-      .update()
-      .set({ isRead: true })
-      .where("notifications.id = :id", { id: notification.id })
-      .execute();
+    try {
+      await notificationRepository
+        .createQueryBuilder()
+        .from(Notification, "n")
+        .update()
+        .set({ isRead: true })
+        .where("notifications.id = :id", { id: notification.id })
+        .execute();
+
+      return "Njoftimi u perditesua";
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   static pushChatNotification = async (request: Request, response: Response) => {
