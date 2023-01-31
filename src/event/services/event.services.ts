@@ -818,7 +818,7 @@ export class EventService {
       if (overlapping) {
         throw new Error();
       } else {
-        if (playersAge !== currentEvent.playersAge) {
+        if (playersAge && playersAge !== currentEvent.playersAge) {
           const [minimumAge, maximumAge] = playersAge.split("-");
           eventPayload.minAge = minimumAge;
           eventPayload.maxAge = maximumAge;
