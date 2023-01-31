@@ -8,13 +8,13 @@ export class NotificationRouter {
   static configRoutes = (app: express.Application) => {
     app.post("/chat-notifications", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.COMPNAY, UserRole.ADMIN]),
       NotificationController.pushChatNotification,
     ]);
 
     app.get("/notifications", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.COMPNAY, UserRole.ADMIN]),
       NotificationController.listMyNotifications,
     ]);
 
@@ -26,7 +26,7 @@ export class NotificationRouter {
 
     app.put("/notifications/:id", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.COMPNAY, UserRole.ADMIN]),
       NotificationController.updateNotification,
     ]);
   };
