@@ -66,7 +66,7 @@ export class NotificationService {
       .from(Notification, "n")
       .update()
       .set({ isRead: true })
-      .where("n.id = :id", { id: notification.id })
+      .where("notifications.id = :id", { id: notification.id })
       .execute();
   };
 
