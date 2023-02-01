@@ -161,18 +161,18 @@ export class RequestService {
     await requestRepository.save(createdRequest);
 
     const teamRepository = getCustomRepository(TeamRepository);
-    const creatorTeam = await teamRepository
+    const teamCreator = await teamRepository
       .createQueryBuilder("team")
       .leftJoinAndSelect("team.user", "u")
       .where("team.id = :id", { id: event.organiserTeamId })
       .getOne();
 
     await NotificationService.createRequestNotification(
-      event.organiserTeamId,
+      teamCreator.user.id,
       NotificationType.TEAM_REQUEST_TO_EVENT,
       event.id,
       event.name,
-      creatorTeam.user.pushToken,
+      teamCreator.user.pushToken,
       team.name
     );
 
@@ -472,7 +472,7 @@ export class RequestService {
       .getOne();
 
     await NotificationService.createRequestNotification(
-      team.id,
+      invitedTeam.user.id,
       NotificationType.TEAM_INVITED_TO_EVENT,
       event.id,
       event.name,
