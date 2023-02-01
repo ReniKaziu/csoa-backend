@@ -185,6 +185,7 @@ export class RequestService {
       .createQueryBuilder("request")
       .leftJoinAndSelect("request.event", "e")
       .leftJoinAndSelect("request.receiver", "r")
+      .leftJoinAndSelect("request.receiverTeam", "receiverTeam")
       .where("request.id = :id", { id: requestId })
       .getOne();
     return request;
@@ -205,6 +206,8 @@ export class RequestService {
 
   static updateRequest = async (requestPayload, originalRequest: Invitation, request: Request) => {
     const requestRepository = getCustomRepository(RequestRepository);
+    const teamUsersRepository = getCustomRepository(TeamUsersRepository);
+    const userRepository = getCustomRepository(UserRepository);
     let requestToBeConfirmed = false;
     let requestToBeRefused = false;
     if (
@@ -224,53 +227,155 @@ export class RequestService {
 
     if (requestToBeConfirmed === true && updatedRequest.status === RequestStatus.CONFIRMED) {
       if (originalRequest.isRequest) {
-        const invitedUser = await UserService.findOne(originalRequest.receiverId);
+        if (originalRequest.receiverTeamId) {
+          const teamPlayers = await teamUsersRepository
+            .createQueryBuilder("tu")
+            .leftJoinAndSelect("tu.player", "p")
+            .where("tu.teamId = :teamId", { teamId: originalRequest.receiverTeamId })
+            .getMany();
 
-        await NotificationService.createRequestNotification(
-          originalRequest.receiverId,
-          NotificationType.CREATOR_CONFIRMED_REQUEST,
-          updatedRequest.event.id,
-          updatedRequest.event.name,
-          invitedUser.pushToken
-        );
+          for (const teamPlayer of teamPlayers) {
+            await NotificationService.createRequestNotification(
+              teamPlayer.player.id,
+              NotificationType.TEAM_REQUEST_TO_EVENT_CONFIRMED,
+              originalRequest.eventId,
+              originalRequest.event.name,
+              teamPlayer.player.pushToken
+            );
+          }
+        } else {
+          const invitedUser = await UserService.findOne(originalRequest.receiverId);
+
+          await NotificationService.createRequestNotification(
+            originalRequest.receiverId,
+            NotificationType.CREATOR_CONFIRMED_REQUEST,
+            updatedRequest.event.id,
+            updatedRequest.event.name,
+            invitedUser.pushToken
+          );
+        }
       } else {
-        const creator = await UserService.findOne(originalRequest.event.creatorId);
+        if (originalRequest.receiverTeamId) {
+          const teamPlayers = await teamUsersRepository
+            .createQueryBuilder("tu")
+            .leftJoinAndSelect("tu.player", "p")
+            .where("tu.teamId = :teamId", { teamId: originalRequest.receiverTeamId })
+            .getMany();
 
-        await NotificationService.createRequestNotification(
-          originalRequest.receiverId,
-          NotificationType.USER_CONFIRMED_REQUEST,
-          updatedRequest.event.id,
-          updatedRequest.event.name,
-          creator.pushToken,
-          "",
-          updatedRequest.receiver.name
-        );
+          for (const teamPlayer of teamPlayers) {
+            await NotificationService.createRequestNotification(
+              teamPlayer.player.id,
+              NotificationType.TEAM_CONFIRMED_INVITATION,
+              originalRequest.eventId,
+              originalRequest.event.name,
+              teamPlayer.player.pushToken,
+              originalRequest.receiverTeam.name
+            );
+          }
+
+          const eventCreator = await userRepository
+            .createQueryBuilder("u")
+            .where("u.id = :id", { id: originalRequest.event.creatorId })
+            .getOne();
+
+          await NotificationService.createRequestNotification(
+            eventCreator.id,
+            NotificationType.TEAM_CONFIRMED_INVITATION,
+            originalRequest.eventId,
+            originalRequest.event.name,
+            eventCreator.pushToken,
+            originalRequest.receiverTeam.name
+          );
+        } else {
+          const creator = await UserService.findOne(originalRequest.event.creatorId);
+
+          await NotificationService.createRequestNotification(
+            originalRequest.receiverId,
+            NotificationType.USER_CONFIRMED_REQUEST,
+            updatedRequest.event.id,
+            updatedRequest.event.name,
+            creator.pushToken,
+            "",
+            updatedRequest.receiver.name
+          );
+        }
       }
     }
 
     if (requestToBeRefused === true && updatedRequest.status === RequestStatus.REFUSED) {
       if (originalRequest.isRequest) {
-        const invitedUser = await UserService.findOne(originalRequest.receiverId);
+        if (originalRequest.receiverTeamId) {
+          const teamPlayers = await teamUsersRepository
+            .createQueryBuilder("tu")
+            .leftJoinAndSelect("tu.player", "p")
+            .where("tu.teamId = :teamId", { teamId: originalRequest.receiverTeamId })
+            .getMany();
 
-        await NotificationService.createRequestNotification(
-          originalRequest.receiverId,
-          NotificationType.CREATOR_REFUSED_REQUEST,
-          updatedRequest.event.id,
-          updatedRequest.event.name,
-          invitedUser.pushToken
-        );
+          for (const teamPlayer of teamPlayers) {
+            await NotificationService.createRequestNotification(
+              teamPlayer.player.id,
+              NotificationType.TEAM_REQUEST_TO_EVENT_REFUSED,
+              originalRequest.eventId,
+              originalRequest.event.name,
+              teamPlayer.player.pushToken
+            );
+          }
+        } else {
+          const invitedUser = await UserService.findOne(originalRequest.receiverId);
+
+          await NotificationService.createRequestNotification(
+            originalRequest.receiverId,
+            NotificationType.CREATOR_REFUSED_REQUEST,
+            updatedRequest.event.id,
+            updatedRequest.event.name,
+            invitedUser.pushToken
+          );
+        }
       } else {
-        const creator = await UserService.findOne(originalRequest.event.creatorId);
+        if (originalRequest.receiverTeamId) {
+          const teamPlayers = await teamUsersRepository
+            .createQueryBuilder("tu")
+            .leftJoinAndSelect("tu.player", "p")
+            .where("tu.teamId = :teamId", { teamId: originalRequest.receiverTeamId })
+            .getMany();
 
-        await NotificationService.createRequestNotification(
-          originalRequest.receiverId,
-          NotificationType.USER_REFUSED_REQUEST,
-          updatedRequest.event.id,
-          updatedRequest.event.name,
-          creator.pushToken,
-          "",
-          updatedRequest.receiver.name
-        );
+          for (const teamPlayer of teamPlayers) {
+            await NotificationService.createRequestNotification(
+              teamPlayer.player.id,
+              NotificationType.TEAM_REFUSED_INVITATION,
+              originalRequest.eventId,
+              originalRequest.event.name,
+              teamPlayer.player.pushToken,
+              originalRequest.receiverTeam.name
+            );
+          }
+
+          const eventCreator = await userRepository
+            .createQueryBuilder("u")
+            .where("u.id = :id", { id: originalRequest.event.creatorId })
+            .getOne();
+
+          await NotificationService.createRequestNotification(
+            eventCreator.id,
+            NotificationType.TEAM_CONFIRMED_INVITATION,
+            originalRequest.eventId,
+            originalRequest.event.name,
+            eventCreator.pushToken,
+            originalRequest.receiverTeam.name
+          );
+        } else {
+          const creator = await UserService.findOne(originalRequest.event.creatorId);
+
+          await NotificationService.createRequestNotification(
+            originalRequest.receiverId,
+            NotificationType.USER_REFUSED_REQUEST,
+            updatedRequest.event.id,
+            updatedRequest.event.name,
+            creator.pushToken,
+            "",
+            updatedRequest.receiver.name
+          );
+        }
       }
     }
     return "Request successfully updated!";

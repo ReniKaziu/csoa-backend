@@ -1,5 +1,5 @@
 import { query, Request, Response } from "express";
-import { Brackets, getCustomRepository, getManager, getRepository } from "typeorm";
+import { Brackets, getCustomRepository, getManager, getRepository, Not } from "typeorm";
 import { Functions } from "../../common/utilities/Functions";
 import { RequestStatus } from "../../request/entities/request.entity";
 import { UserService } from "../../user/services/user.service";
@@ -15,6 +15,7 @@ import { UserRole } from "../../user/utilities/UserRole";
 import { NotificationService } from "../../notifications/services/notification.services";
 import { User } from "../../user/entities/user.entity";
 import { NotificationType } from "../../notifications/entities/notification.entity";
+import { UserRepository } from "../../user/repositories/user.repository";
 
 export class EventService {
   static listMyEvents = async (request: Request, response: Response) => {
@@ -741,6 +742,8 @@ export class EventService {
 
   static patchSingleEvent = async (eventPayload, currentEvent: Event, request: Request) => {
     const eventRepository = getCustomRepository(EventRepository);
+    const requestRepository = getCustomRepository(RequestRepository);
+    const userRepository = getCustomRepository(UserRepository);
     if (currentEvent.tsDeleted) {
       currentEvent.tsDeleted = null;
       await eventRepository.save(currentEvent);
@@ -826,6 +829,87 @@ export class EventService {
         const mergedEvent = queryRunner.manager.merge(Event, currentEvent, eventPayload);
         updatedEvent = await queryRunner.manager.save(mergedEvent);
         await queryRunner.commitTransaction();
+
+        if (eventToBeConfirmed === true && updatedEvent.status === EventStatus.CONFIRMED) {
+          const eventPlayers = await requestRepository
+            .createQueryBuilder("r")
+            .leftJoinAndSelect("r.receiver", "receiver")
+            .where("r.eventId = :eventId", { eventId: currentEvent.id })
+            .andWhere("r.status = :status", { status: RequestStatus.CONFIRMED })
+            .getMany();
+
+          const mappedPlayers = eventPlayers.map((eventPlayer) => eventPlayer.receiver);
+          for (const player of mappedPlayers) {
+            NotificationService.createRequestNotification(
+              player.id,
+              NotificationType.EVENT_CONFIRMED,
+              currentEvent.id,
+              currentEvent.name,
+              player.pushToken
+            );
+          }
+        }
+
+        if (eventToBeConfirmedByUser === true && updatedEvent.isConfirmedByUser) {
+          const complexAdmin = await userRepository
+            .createQueryBuilder("u")
+            .where("u.complexId = :id", { id: currentEvent.location.complexId })
+            .getOne();
+
+          NotificationService.createRequestNotification(
+            complexAdmin.id,
+            NotificationType.EVENT_CONFIRMED_BY_USER,
+            currentEvent.id,
+            currentEvent.name,
+            complexAdmin.pushToken
+          );
+        }
+
+        // if (eventToBeCompleted === true && updatedEvent.status === EventStatus.COMPLETED) {
+        //   const eventPlayers = await eventTeamsUsersRepository
+        //     .createQueryBuilder("etu")
+        //     .leftJoinAndSelect("etu.teamUser", "tu", "tu.id = etu.teamUserId")
+        //     .leftJoinAndSelect("tu.player", "p", "p.id = tu.playerId")
+        //     .leftJoinAndSelect("tu.team", "t", "t.id = tu.teamId")
+        //     .where("etu.eventId = :eventId", { eventId: updatedEvent.id })
+        //     .getMany();
+
+        //   const mappedPlayersIds = eventPlayers.map((eventPlayers) => {
+        //     return {
+        //       id: eventPlayers.teamUser.player.id,
+        //       teamId: eventPlayers.teamUser.team.id,
+        //     };
+        //   });
+        //   const organiserTeamPlayersIds = mappedPlayersIds
+        //     .filter((teamPlayers) => teamPlayers.teamId === updatedEvent.organiserTeamId)
+        //     .map((player) => player.id);
+        //   const receiverTeamPlayersIds = mappedPlayersIds
+        //     .filter((teamPlayers) => teamPlayers.teamId === updatedEvent.receiverTeamId)
+        //     .map((player) => player.id);
+        //   let notifications = [];
+        //   for (const player of mappedPlayersIds) {
+        //     const resultNotificationBody = {
+        //       receiverId: player.id,
+        //       type: NotificationType.EVENT_COMPLETED_RESULT,
+        //       payload: { eventId: updatedEvent.id, eventName: updatedEvent.name },
+        //     };
+        //     const reviewNotificationBody = {
+        //       receiverId: player.id,
+        //       type: NotificationType.EVENT_COMPLETED_REVIEW,
+        //       // TODO: Find opposite players
+        //       payload: {
+        //         eventId: updatedEvent.id,
+        //         eventName: updatedEvent.name,
+        //         oppositePlayersIds:
+        //           player.teamId === updatedEvent.organiserTeamId ? receiverTeamPlayersIds : organiserTeamPlayersIds,
+        //       },
+        //     };
+        //     notifications.push(resultNotificationBody);
+        //     notifications.push(reviewNotificationBody);
+        //   }
+
+        //   await NotificationService.storeNotification(notifications);
+        // }
         return updatedEvent;
       }
     } catch (error) {

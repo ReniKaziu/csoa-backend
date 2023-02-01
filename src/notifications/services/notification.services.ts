@@ -386,6 +386,12 @@ export class NotificationService {
       [NotificationType.CREATOR_REFUSED_REQUEST]: `Krijuesi i eventit ${eventName} refuzoi kerkesen tuaj per t'u futur`,
       [NotificationType.USER_REFUSED_REQUEST]: `${receiverName} refuzoi ftesen tek eventi ${eventName}`,
       [NotificationType.TEAM_INVITED_TO_EVENT]: `Ju jeni ftuar te luani tek eventi ${eventName}`,
+      [NotificationType.EVENT_CONFIRMED]: `Eventi ${eventName} u konfirmua nga kompleksi`,
+      [NotificationType.EVENT_CONFIRMED_BY_USER]: `Perdoruesi konfirmoi eventin ${eventName}`,
+      [NotificationType.TEAM_REQUEST_TO_EVENT_CONFIRMED]: `Kerkesa ne ekip per tu futur tek eventi ${eventName} u konfirmua`,
+      [NotificationType.TEAM_CONFIRMED_INVITATION]: `Ekipi ${teamName} pranoi ftesen per eventin ${eventName}`,
+      [NotificationType.TEAM_REQUEST_TO_EVENT_REFUSED]: `Kerkesa ne ekip per tu futur tek eventi ${eventName} u refuzua`,
+      [NotificationType.TEAM_REFUSED_INVITATION]: `Ekipi ${teamName} refuzoi ftesen per eventin ${eventName}`,
     };
 
     const notificationBody = {
