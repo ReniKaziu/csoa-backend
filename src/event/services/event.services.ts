@@ -16,6 +16,7 @@ import { NotificationService } from "../../notifications/services/notification.s
 import { User } from "../../user/entities/user.entity";
 import { NotificationType } from "../../notifications/entities/notification.entity";
 import { UserRepository } from "../../user/repositories/user.repository";
+import { TeamUsersRepository } from "../../team/repositories/team.users.repository";
 
 export class EventService {
   static listMyEvents = async (request: Request, response: Response) => {
@@ -744,6 +745,7 @@ export class EventService {
     const eventRepository = getCustomRepository(EventRepository);
     const requestRepository = getCustomRepository(RequestRepository);
     const userRepository = getCustomRepository(UserRepository);
+    const teamUsersRepository = getCustomRepository(TeamUsersRepository);
     if (currentEvent.tsDeleted) {
       currentEvent.tsDeleted = null;
       await eventRepository.save(currentEvent);
@@ -831,22 +833,49 @@ export class EventService {
         await queryRunner.commitTransaction();
 
         if (eventToBeConfirmed === true && updatedEvent.status === EventStatus.CONFIRMED) {
-          const eventPlayers = await requestRepository
-            .createQueryBuilder("r")
-            .leftJoinAndSelect("r.receiver", "receiver")
-            .where("r.eventId = :eventId", { eventId: currentEvent.id })
-            .andWhere("r.status = :status", { status: RequestStatus.CONFIRMED })
-            .getMany();
+          if (currentEvent.isTeam) {
+            const teams = await requestRepository
+              .createQueryBuilder("r")
+              .where("r.eventId = :eventId", { eventId: currentEvent.id })
+              .andWhere("r.status = :status", { status: RequestStatus.CONFIRMED })
+              .getOne();
 
-          const mappedPlayers = eventPlayers.map((eventPlayer) => eventPlayer.receiver);
-          for (const player of mappedPlayers) {
-            NotificationService.createRequestNotification(
-              player.id,
-              NotificationType.EVENT_CONFIRMED,
-              currentEvent.id,
-              currentEvent.name,
-              player.pushToken
-            );
+            const eventPlayers = await teamUsersRepository
+              .createQueryBuilder("tu")
+              .leftJoinAndSelect("tu.player", "player")
+              .where("tu.teamId IN (:...teamId)", { teamId: [teams.senderTeamId, teams.receiverTeamId] })
+              .andWhere("tu.isConfirmed = :boolean", { boolean: true })
+              .andWhere("tu.status = :status", { status: RequestStatus.CONFIRMED })
+              .getMany();
+
+            const mappedPlayers = eventPlayers.map((player) => player.player);
+            for (const player of mappedPlayers) {
+              NotificationService.createRequestNotification(
+                player.id,
+                NotificationType.EVENT_CONFIRMED,
+                currentEvent.id,
+                currentEvent.name,
+                player.pushToken
+              );
+            }
+          } else {
+            const eventPlayers = await requestRepository
+              .createQueryBuilder("r")
+              .leftJoinAndSelect("r.receiver", "receiver")
+              .where("r.eventId = :eventId", { eventId: currentEvent.id })
+              .andWhere("r.status = :status", { status: RequestStatus.CONFIRMED })
+              .getMany();
+
+            const mappedPlayers = eventPlayers.map((eventPlayer) => eventPlayer.receiver);
+            for (const player of mappedPlayers) {
+              NotificationService.createRequestNotification(
+                player.id,
+                NotificationType.EVENT_CONFIRMED,
+                currentEvent.id,
+                currentEvent.name,
+                player.pushToken
+              );
+            }
           }
         }
 

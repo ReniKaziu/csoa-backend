@@ -4,7 +4,6 @@ import { ERROR_MESSAGES } from "../utilities/ErrorMessages";
 import { UserRole } from "../../user/utilities/UserRole";
 import { getRepository } from "typeorm";
 import { Complex } from "../../complex/entities/complex.entity";
-import { User } from "../../user/entities/user.entity";
 import { Event } from "../../event/entities/event.entity";
 import { Team } from "../../team/entities/team.entity";
 

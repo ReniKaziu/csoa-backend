@@ -24,7 +24,9 @@ export class RequestService {
       .createQueryBuilder("user")
       .leftJoinAndSelect("user.receivedReviews", "review")
       .where(`user.sports LIKE '%"${sport}": {"picked": true%'`)
-      .andWhere(`user.id NOT IN (select receiverId from requests where eventId = ${event.id} )`)
+      .andWhere(
+        `user.id NOT IN (SELECT receiverId FROM requests WHERE eventId = ${event.id} AND status IN ('${RequestStatus.CONFIRMED}', '${RequestStatus.WAITING_FOR_CONFIRMATION}')  )`
+      )
       .andWhere("user.address = :eventCity", { eventCity: event.location.complex.city })
       .andWhere("(year(CURRENT_TIMESTAMP) - year(user.birthday)) >= :eventMinAge", { eventMinAge: event.minAge })
       .andWhere("(year(CURRENT_TIMESTAMP) - year(user.birthday)) <= :eventMaxAge", { eventMaxAge: event.maxAge });
