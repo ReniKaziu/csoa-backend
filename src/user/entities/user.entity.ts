@@ -61,6 +61,9 @@ export class User extends Common {
   @Column("json", { nullable: false, name: "sports" })
   public sports: string;
 
+  @Column("json", { nullable: true, name: "roomId" })
+  public roomId: string;
+
   @ManyToOne(() => Complex, (complex) => complex.users)
   complex: Complex;
   @Column("int", { nullable: true })

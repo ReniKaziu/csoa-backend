@@ -2,6 +2,7 @@ import { Between, getCustomRepository, getRepository } from "typeorm";
 import { Complex } from "../../complex/entities/complex.entity";
 import { Event, EventStatus } from "../../event/entities/event.entity";
 import { User } from "../../user/entities/user.entity";
+import { UserRole } from "../../user/utilities/UserRole";
 
 export class DashboardService {
   static async getStatistics() {
@@ -10,7 +11,7 @@ export class DashboardService {
     const eventStatistics = getRepository(Event);
 
     const userStatistics = await userRepository.count({
-      where: { role: "user" },
+      where: { role: UserRole.USER },
       withDeleted: true,
     });
     const complexCount = await complexRepository.count({ withDeleted: true });
@@ -21,18 +22,13 @@ export class DashboardService {
 
     const events = await eventStatistics.find({
       where: {
-        tsCreated: Between(
-          new Date(year, month, 1),
-          new Date(year, month + 1, 1)
-        ),
+        tsCreated: Between(new Date(year, month, 1), new Date(year, month + 1, 1)),
         status: EventStatus.COMPLETED,
       },
       withDeleted: true,
     });
 
-    const userReservations = events.filter(
-      (event) => event.isUserReservation
-    ).length;
+    const userReservations = events.filter((event) => event.isUserReservation).length;
 
     return {
       userStatistics,

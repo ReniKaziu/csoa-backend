@@ -123,24 +123,27 @@ export class NotificationService {
             body: body.payload.message,
           },
         };
-        const pushNotifications = [];
-        const pushNotificationBody = {
-          to: receiverUser.pushToken ?? "123",
-          title: `Mesazh i ri nga ${senderUser.name}`,
-          body: body.payload.message,
-          data: {
-            receiverId: receiverUser.id,
-            receiverPhoto: receiverUser.profilePicture,
-            receiverName: receiverUser.name,
-            senderPhoto: senderUser.profilePicture,
-            senderName: senderUser.name,
-          },
-        };
+        const insideUserChatJson = JSON.stringify({ userId: Number(senderId) });
+        if (JSON.stringify(receiverUser.roomId) !== insideUserChatJson) {
+          const pushNotifications = [];
+          const pushNotificationBody = {
+            to: receiverUser.pushToken ?? "123",
+            title: `Mesazh i ri nga ${senderUser.name}`,
+            body: body.payload.message,
+            data: {
+              receiverId: receiverUser.id,
+              receiverPhoto: receiverUser.profilePicture,
+              receiverName: receiverUser.name,
+              senderPhoto: senderUser.profilePicture,
+              senderName: senderUser.name,
+            },
+          };
+          pushNotifications.push(pushNotificationBody);
+          NotificationService.pushNotification(pushNotifications);
+        }
         const notifications = [];
         notifications.push(notificationBody);
-        pushNotifications.push(pushNotificationBody);
         NotificationService.storeNotification(notifications);
-        NotificationService.pushNotification(pushNotifications);
       }
 
       if (body.type === NotificationType.CHAT_TEAM) {
@@ -167,19 +170,6 @@ export class NotificationService {
           .getOne();
         const sentIds = [];
         const notifications = [];
-        const pushNotifications = [];
-        for (const teamPlayer of teamPlayers) {
-          sentIds.push(teamPlayer.playerId);
-          if (teamPlayer.playerId !== senderId) {
-            const pushNotificationBody = {
-              to: teamPlayer.player.pushToken ?? "123",
-              title: `Mesazh i ri nga ${senderName.name}`,
-              body: body.payload.message,
-              data: { teamId: body.payload.teamId, teamName: team.name, teamPhoto },
-            };
-            pushNotifications.push(pushNotificationBody);
-          }
-        }
         const notificationBody = {
           senderId: senderId,
           teamId: body.payload.teamId,
@@ -194,9 +184,25 @@ export class NotificationService {
             body: body.payload.message,
           },
         };
+        const pushNotifications = [];
+        for (const teamPlayer of teamPlayers) {
+          const insideTeamChatJson = JSON.stringify({ teamId: team.id });
+          if (JSON.stringify(teamPlayer.player.roomId) !== insideTeamChatJson) {
+            if (team) sentIds.push(teamPlayer.playerId);
+            if (teamPlayer.playerId !== senderId) {
+              const pushNotificationBody = {
+                to: teamPlayer.player.pushToken ?? "123",
+                title: `Mesazh i ri nga ${senderName.name}`,
+                body: body.payload.message,
+                data: { teamId: body.payload.teamId, teamName: team.name, teamPhoto },
+              };
+              pushNotifications.push(pushNotificationBody);
+            }
+            NotificationService.pushNotification(pushNotifications);
+          }
+        }
         notifications.push(notificationBody);
         NotificationService.storeNotification(notifications);
-        NotificationService.pushNotification(pushNotifications);
       }
 
       if (body.type === NotificationType.CHAT_EVENT) {
@@ -221,24 +227,6 @@ export class NotificationService {
           .getOne();
         const sentIds = [];
         const notifications = [];
-        const pushNotifications = [];
-        for (const eventPlayer of eventPlayers) {
-          sentIds.push(eventPlayer.receiverId);
-          if (eventPlayer.receiverId !== senderId) {
-            const pushNotificationBody = {
-              to: eventPlayer.receiver.pushToken ?? "123",
-              title: `Mesazh i ri nga ${senderName.name}`,
-              body: body.payload.message,
-              data: {
-                eventId: body.payload.eventId,
-                eventName: event.name,
-                eventStartDate: event.startDate,
-                eventEndDate: event.endDate,
-              },
-            };
-            pushNotifications.push(pushNotificationBody);
-          }
-        }
         const notificationBody = {
           senderId: senderId,
           eventId: body.payload.eventId,
@@ -254,9 +242,31 @@ export class NotificationService {
             body: body.payload.message,
           },
         };
+
+        const pushNotifications = [];
+        for (const eventPlayer of eventPlayers) {
+          const insideEventChatJson = JSON.stringify({ eventId: event.id });
+          if (JSON.stringify(eventPlayer.receiver.roomId) !== insideEventChatJson) {
+            sentIds.push(eventPlayer.receiverId);
+            if (eventPlayer.receiverId !== senderId) {
+              const pushNotificationBody = {
+                to: eventPlayer.receiver.pushToken ?? "123",
+                title: `Mesazh i ri nga ${senderName.name}`,
+                body: body.payload.message,
+                data: {
+                  eventId: body.payload.eventId,
+                  eventName: event.name,
+                  eventStartDate: event.startDate,
+                  eventEndDate: event.endDate,
+                },
+              };
+              pushNotifications.push(pushNotificationBody);
+            }
+            NotificationService.pushNotification(pushNotifications);
+          }
+        }
         notifications.push(notificationBody);
         NotificationService.storeNotification(notifications);
-        NotificationService.pushNotification(pushNotifications);
       }
       return "Success";
     } catch (err) {
