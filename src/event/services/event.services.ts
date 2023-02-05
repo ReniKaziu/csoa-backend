@@ -433,7 +433,8 @@ export class EventService {
             NotificationType.EVENT_CREATED,
             createdEvent[0].id,
             createdEvent[0].name,
-            complexUser.pushToken
+            complexUser.pushToken,
+            createdEvent[0].sport
           );
           if (isWeekly) {
             const weeklyEventGroup = new WeeklyEventGroup();
@@ -855,7 +856,8 @@ export class EventService {
                 NotificationType.EVENT_CONFIRMED,
                 currentEvent.id,
                 currentEvent.name,
-                player.pushToken
+                player.pushToken,
+                currentEvent.sport
               );
             }
           } else {
@@ -873,7 +875,8 @@ export class EventService {
                 NotificationType.EVENT_CONFIRMED,
                 currentEvent.id,
                 currentEvent.name,
-                player.pushToken
+                player.pushToken,
+                currentEvent.sport
               );
             }
           }
@@ -885,12 +888,20 @@ export class EventService {
             .where("u.complexId = :id", { id: currentEvent.location.complexId })
             .getOne();
 
+          const eventCreator = await userRepository
+            .createQueryBuilder("u")
+            .select("u.name")
+            .where("u.id = :creatorId", { creatorId: currentEvent.creatorId })
+            .getOne();
+
           NotificationService.createRequestNotification(
             complexAdmin.id,
             NotificationType.EVENT_CONFIRMED_BY_USER,
             currentEvent.id,
             currentEvent.name,
-            complexAdmin.pushToken
+            complexAdmin.pushToken,
+            currentEvent.sport,
+            eventCreator.name
           );
         }
 

@@ -7,6 +7,7 @@ import { TeamUsers, TeamUserStatus } from "../entities/team.users.entity";
 import { TeamUsersRepository } from "../repositories/team.users.repository";
 import { NotificationType } from "../../notifications/entities/notification.entity";
 import { NotificationService } from "../../notifications/services/notification.services";
+import { UserService } from "../../user/services/user.service";
 
 export class TeamUsersService {
   static listPossiblePlayers = async (team: Team, request: Request, response: Response) => {
@@ -78,6 +79,7 @@ export class TeamUsersService {
 
   static inviteUser = async (team: Team, user: User, request: Request, response: Response) => {
     const teamUsersRepository = getCustomRepository(TeamUsersRepository);
+    const userCreator = await UserService.findOne(+response.locals.jwt.userId);
 
     const payload = {
       sport: team.sport,
@@ -95,7 +97,9 @@ export class TeamUsersService {
       NotificationType.INVITATION_TO_TEAM,
       team.name,
       team.id,
-      user.pushToken
+      user.pushToken,
+      team.sport,
+      userCreator.name
     );
 
     return createdInvitation;
@@ -166,6 +170,7 @@ export class TeamUsersService {
         teamUser.team.name,
         teamUser.teamId,
         teamUser.team.user.pushToken,
+        teamUser.team.sport,
         teamUser.player.name
       );
     }
@@ -176,6 +181,7 @@ export class TeamUsersService {
         teamUser.team.name,
         teamUser.teamId,
         teamUser.team.user.pushToken,
+        teamUser.team.sport,
         teamUser.player.name
       );
     }
@@ -193,6 +199,7 @@ export class TeamUsersService {
         teamUser.team.name,
         teamUser.teamId,
         teamUser.team.user.pushToken,
+        teamUser.team.sport,
         teamUser.player.name
       );
     }

@@ -328,16 +328,17 @@ export class NotificationService {
     teamName: string,
     teamId: number,
     userToken: string,
-    userName?: string
+    sport: string,
+    senderName?: string
   ) => {
     let notifications = [];
     let pushNotifications = [];
 
     const titles = {
-      [NotificationType.INVITATION_TO_TEAM]: `Ju jeni ftuar tek ekipi: ${teamName}`,
-      [NotificationType.INVITATION_TO_TEAM_CONFIRMED]: `Lojtari ${userName} pranoi ftesen tek ekipi: ${teamName}`,
-      [NotificationType.INVITATION_TO_TEAM_REFUSED]: `Lojtari ${userName} refuzoi ftesen tek ekipi: ${teamName}`,
-      [NotificationType.USER_EXITED_TEAM]: `Lojtari ${userName} eshte larguar nga ekipi: ${teamName}`,
+      [NotificationType.INVITATION_TO_TEAM]: `${senderName} ju fton tek ekipi: ${teamName} per ${sport}`,
+      [NotificationType.INVITATION_TO_TEAM_CONFIRMED]: `Lojtari ${senderName} pranoi ftesen tek ekipi: ${teamName} per ${sport}`,
+      [NotificationType.INVITATION_TO_TEAM_REFUSED]: `Lojtari ${senderName} refuzoi ftesen tek ekipi: ${teamName} per ${sport}`,
+      [NotificationType.USER_EXITED_TEAM]: `Lojtari ${senderName} eshte larguar nga ekipi: ${teamName}`,
     };
 
     const notificationBody = {
@@ -370,28 +371,34 @@ export class NotificationService {
     eventId: number,
     eventName: string,
     userToken: string,
-    teamName?: string,
-    receiverName?: string
+    sport?: string,
+    senderName?: string
   ) => {
     let notifications = [];
     let pushNotifications = [];
+    const sportsMapped = {
+      football: "futboll",
+      basketball: "basketboll",
+      tenis: "tenis",
+      voleyball: "volejboll",
+    };
 
     const titles = {
-      [NotificationType.INVITATION_TO_EVENT]: `Ju jeni ftuar tek eventi: ${eventName}`,
-      [NotificationType.REQUEST_TO_EVENT]: `Ju keni nje kerkese te re per t'u futur tek eventi: ${eventName}`,
-      [NotificationType.TEAM_REQUEST_TO_EVENT]: `Ekipi ${teamName} ka kerkuar te luaje me ju ne eventin ${eventName}`,
-      [NotificationType.INVITATION_DELETED]: `Ftesa tek eventi ${eventName} eshte anuluar!`,
-      [NotificationType.CREATOR_CONFIRMED_REQUEST]: `Krijuesi i eventit ${eventName} pranoi kerkesen tuaj per t'u futur`,
-      [NotificationType.USER_CONFIRMED_REQUEST]: `${receiverName} pranoi ftesen tek eventi ${eventName}`,
-      [NotificationType.CREATOR_REFUSED_REQUEST]: `Krijuesi i eventit ${eventName} refuzoi kerkesen tuaj per t'u futur`,
-      [NotificationType.USER_REFUSED_REQUEST]: `${receiverName} refuzoi ftesen tek eventi ${eventName}`,
-      [NotificationType.TEAM_INVITED_TO_EVENT]: `Ju jeni ftuar te luani tek eventi ${eventName}`,
-      [NotificationType.EVENT_CONFIRMED]: `Eventi ${eventName} u konfirmua nga kompleksi`,
-      [NotificationType.EVENT_CONFIRMED_BY_USER]: `Perdoruesi konfirmoi eventin ${eventName}`,
-      [NotificationType.TEAM_REQUEST_TO_EVENT_CONFIRMED]: `Kerkesa ne ekip per tu futur tek eventi ${eventName} u konfirmua`,
-      [NotificationType.TEAM_CONFIRMED_INVITATION]: `Ekipi ${teamName} pranoi ftesen per eventin ${eventName}`,
-      [NotificationType.TEAM_REQUEST_TO_EVENT_REFUSED]: `Kerkesa ne ekip per tu futur tek eventi ${eventName} u refuzua`,
-      [NotificationType.TEAM_REFUSED_INVITATION]: `Ekipi ${teamName} refuzoi ftesen per eventin ${eventName}`,
+      [NotificationType.INVITATION_TO_EVENT]: `${senderName} te fton per ${sportsMapped[sport]} ne eventin ${eventName}`,
+      [NotificationType.REQUEST_TO_EVENT]: `${senderName} deshiron te bashkohet ne eventin ${eventName} tuaj per ${sportsMapped[sport]} `,
+      [NotificationType.TEAM_REQUEST_TO_EVENT]: `Ekipi ${senderName} ka kerkuar te futet ne eventin ${eventName} per ${sportsMapped[sport]}`,
+      [NotificationType.INVITATION_DELETED]: `Ftesa per lojen ${sportsMapped[sport]} eshte anuluar!`,
+      [NotificationType.CREATOR_CONFIRMED_REQUEST]: `${senderName} pranoi kerkesen tuaj per t'u futur ne eventin ${eventName} per ${sportsMapped[sport]}`,
+      [NotificationType.USER_CONFIRMED_INVITATION]: `${senderName} pranoi ftesen per ${sportsMapped[sport]} tek eventi ${eventName}`,
+      [NotificationType.CREATOR_REFUSED_REQUEST]: `Na vjen keq por eshte plotesuar numri i lojtareve`,
+      [NotificationType.USER_REFUSED_REQUEST]: `${senderName} refuzoi ftesen tek eventi ${eventName} per ${sportsMapped[sport]}`,
+      [NotificationType.TEAM_INVITED_TO_EVENT]: `${senderName} ju ftoi te luani tek eventi ${eventName} per ${sportsMapped[sport]}`,
+      [NotificationType.EVENT_CONFIRMED]: `Eventi ${eventName} per ${sportsMapped[sport]} u konfirmua nga kompleksi`,
+      [NotificationType.EVENT_CONFIRMED_BY_USER]: `Perdoruesi ${senderName} konfirmoi eventin ${eventName} per ${sportsMapped[sport]}`,
+      [NotificationType.TEAM_REQUEST_TO_EVENT_CONFIRMED]: `Kerkesa ne ekip per tu futur tek eventi ${eventName} per ${sportsMapped[sport]} u konfirmua`,
+      [NotificationType.TEAM_CONFIRMED_INVITATION]: `Ekipi ${senderName} pranoi ftesen ne eventin ${eventName} per ${sportsMapped[sport]}`,
+      [NotificationType.TEAM_REQUEST_TO_EVENT_REFUSED]: `Na vjen keq por eshte plotesuar numri i ekipeve`,
+      [NotificationType.TEAM_REFUSED_INVITATION]: `Ekipi ${senderName} refuzoi ftesen ne eventin ${eventName} per ${sportsMapped[sport]}`,
     };
 
     const notificationBody = {
@@ -405,6 +412,8 @@ export class NotificationService {
         body: "Futuni ne aplikacion dhe shikoni me shume",
       },
     };
+    console.log(titles[notificationType]);
+
     const pushNotificationBody = {
       to: userToken ?? "123",
       title: titles[notificationType],
@@ -423,18 +432,25 @@ export class NotificationService {
     notificationType: NotificationType,
     eventId: number,
     eventName: string,
-    userToken: string
+    userToken: string,
+    sport?: string
   ) => {
     let notifications = [];
     let pushNotifications = [];
+    const sportsMapped = {
+      football: "futboll",
+      basketball: "basketboll",
+      tenis: "tenis",
+      voleyball: "volejboll",
+    };
 
     const titles = {
-      [NotificationType.EVENT_CREATED]: `Nje event i ri eshte krijuar ne kompleks`,
-      [NotificationType.EVENT_DELETED_BY_USER_BEFORE_CONFIRMATION]: `Eventi ${eventName} u kancelua nga perdoruesi para konfirmimit`,
-      [NotificationType.EVENT_REFUSED_BY_COMPLEX]: `Eventi ${eventName} u refuzua nga kompleksi`,
-      [NotificationType.EVENT_CANCELED_BY_USER_AFTER_CONFIRMATION]: `Eventi i konfirmuar ${eventName} u kancelua nga perdoruesi`,
-      [NotificationType.EVENT_CANCELED_BY_COMPLEX_AFTER_CONFIRMATION]: `Eventi i konfirmuar ${eventName} u kancelua nga kompleksi`,
-      [NotificationType.EVENT_CONFIRMED]: `Eventi ${eventName} u konfirmua nga kompleksi`,
+      [NotificationType.EVENT_CREATED]: `Nje event i ri per ${sportsMapped[sport]} eshte krijuar ne kompleks`,
+      [NotificationType.EVENT_DELETED_BY_USER_BEFORE_CONFIRMATION]: `Eventi ${eventName} per ${sportsMapped[sport]} u kancelua nga perdoruesi para konfirmimit`,
+      [NotificationType.EVENT_REFUSED_BY_COMPLEX]: `Eventi ${eventName} per ${sportsMapped[sport]} u refuzua nga kompleksi`,
+      [NotificationType.EVENT_CANCELED_BY_USER_AFTER_CONFIRMATION]: `Eventi i konfirmuar ${eventName} per ${sportsMapped[sport]} u kancelua nga perdoruesi`,
+      [NotificationType.EVENT_CANCELED_BY_COMPLEX_AFTER_CONFIRMATION]: `Eventi i konfirmuar ${eventName} per ${sportsMapped[sport]} u kancelua nga kompleksi`,
+      [NotificationType.EVENT_CONFIRMED]: `Eventi ${eventName} per ${sportsMapped[sport]} u konfirmua nga kompleksi`,
     };
 
     const notificationBody = {

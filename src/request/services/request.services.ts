@@ -97,8 +97,14 @@ export class RequestService {
 
   static inviteUser = async (event: Event, user: User, request: Request, response: Response) => {
     const requestRepository = getCustomRepository(RequestRepository);
+    const userRepository = getCustomRepository(UserRepository);
 
     const senderId = +response.locals.jwt.userId;
+    const senderName = await userRepository
+      .createQueryBuilder("u")
+      .select("u.name")
+      .where("u.id = :id", { id: senderId })
+      .getOne();
     const payload = {
       senderId: senderId,
       receiverId: user.id,
@@ -115,7 +121,9 @@ export class RequestService {
       NotificationType.INVITATION_TO_EVENT,
       event.id,
       event.name,
-      user.pushToken
+      user.pushToken,
+      event.sport,
+      senderName.name
     );
 
     return createdRequest;
@@ -123,7 +131,13 @@ export class RequestService {
 
   static requestToEnter = async (event: Event, creator: User, request: Request, response: Response) => {
     const requestRepository = getCustomRepository(RequestRepository);
+    const userRepository = getCustomRepository(UserRepository);
     const receiverId = +response.locals.jwt.userId;
+    const senderName = await userRepository
+      .createQueryBuilder("u")
+      .select("u.name")
+      .where("u.id = :id", { id: receiverId })
+      .getOne();
 
     const payload = {
       senderId: event.creatorId,
@@ -138,11 +152,13 @@ export class RequestService {
     await requestRepository.save(createdRequest);
 
     await NotificationService.createRequestNotification(
-      receiverId,
+      creator.id,
       NotificationType.REQUEST_TO_EVENT,
       event.id,
       event.name,
-      creator.pushToken
+      creator.pushToken,
+      event.sport,
+      senderName.name
     );
 
     return createdRequest;
@@ -175,6 +191,7 @@ export class RequestService {
       event.id,
       event.name,
       teamCreator.user.pushToken,
+      event.sport,
       team.name
     );
 
@@ -202,7 +219,8 @@ export class RequestService {
       NotificationType.INVITATION_DELETED,
       request.event.id,
       request.event.name,
-      request.receiver.pushToken
+      request.receiver.pushToken,
+      request.event.sport
     );
   };
 
@@ -242,18 +260,23 @@ export class RequestService {
               NotificationType.TEAM_REQUEST_TO_EVENT_CONFIRMED,
               originalRequest.eventId,
               originalRequest.event.name,
-              teamPlayer.player.pushToken
+              teamPlayer.player.pushToken,
+              originalRequest.event.sport
             );
           }
         } else {
           const invitedUser = await UserService.findOne(originalRequest.receiverId);
+
+          const eventCreator = await UserService.findOne(updatedRequest.event.creatorId);
 
           await NotificationService.createRequestNotification(
             originalRequest.receiverId,
             NotificationType.CREATOR_CONFIRMED_REQUEST,
             updatedRequest.event.id,
             updatedRequest.event.name,
-            invitedUser.pushToken
+            invitedUser.pushToken,
+            updatedRequest.event.sport,
+            eventCreator.name
           );
         }
       } else {
@@ -271,7 +294,8 @@ export class RequestService {
               originalRequest.eventId,
               originalRequest.event.name,
               teamPlayer.player.pushToken,
-              originalRequest.receiverTeam.name
+              originalRequest.event.sport,
+              originalRequest.receiver.name
             );
           }
 
@@ -293,11 +317,11 @@ export class RequestService {
 
           await NotificationService.createRequestNotification(
             originalRequest.receiverId,
-            NotificationType.USER_CONFIRMED_REQUEST,
+            NotificationType.USER_CONFIRMED_INVITATION,
             updatedRequest.event.id,
             updatedRequest.event.name,
             creator.pushToken,
-            "",
+            updatedRequest.event.sport,
             updatedRequest.receiver.name
           );
         }
@@ -330,7 +354,8 @@ export class RequestService {
             NotificationType.CREATOR_REFUSED_REQUEST,
             updatedRequest.event.id,
             updatedRequest.event.name,
-            invitedUser.pushToken
+            invitedUser.pushToken,
+            updatedRequest.event.sport
           );
         }
       } else {
@@ -348,6 +373,7 @@ export class RequestService {
               originalRequest.eventId,
               originalRequest.event.name,
               teamPlayer.player.pushToken,
+              originalRequest.event.sport,
               originalRequest.receiverTeam.name
             );
           }
@@ -363,6 +389,7 @@ export class RequestService {
             originalRequest.eventId,
             originalRequest.event.name,
             eventCreator.pushToken,
+            originalRequest.event.sport,
             originalRequest.receiverTeam.name
           );
         } else {
@@ -374,7 +401,7 @@ export class RequestService {
             updatedRequest.event.id,
             updatedRequest.event.name,
             creator.pushToken,
-            "",
+            updatedRequest.event.sport,
             updatedRequest.receiver.name
           );
         }
@@ -584,6 +611,7 @@ export class RequestService {
       event.id,
       event.name,
       invitedTeam.user.pushToken,
+      event.sport,
       team.name
     );
 

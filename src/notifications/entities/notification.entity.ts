@@ -23,7 +23,7 @@ export enum NotificationType {
   TEAM_INVITED_TO_EVENT_CONFIRMED = "team invited to enter event confirmed",
   TEAM_CONFIRMED_INVITATION = "team confirmed invitation",
   TEAM_REFUSED_INVITATION = "team refused invitation",
-  USER_CONFIRMED_REQUEST = "user confirmed request",
+  USER_CONFIRMED_INVITATION = "user confirmed invitation",
   USER_REFUSED_REQUEST = "user refused request",
   CREATOR_CONFIRMED_REQUEST = "creator confirmed request",
   CREATOR_REFUSED_REQUEST = "creator refused request",

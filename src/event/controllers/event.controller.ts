@@ -6,10 +6,10 @@ import { Helper } from "../../common/utilities/Helper";
 import { HttpStatusCode } from "../../common/utilities/HttpStatusCodes";
 import { Mailer } from "../../common/utilities/Mailer";
 import { SuccessResponse } from "../../common/utilities/SuccessResponse";
-import { Complex } from "../../complex/entities/complex.entity";
 import { Location } from "../../complex/entities/location.entity";
 import { NotificationType } from "../../notifications/entities/notification.entity";
 import { NotificationService } from "../../notifications/services/notification.services";
+import { Request as Invitations, RequestStatus } from "../../request/entities/request.entity";
 import { User } from "../../user/entities/user.entity";
 import { UserService } from "../../user/services/user.service";
 import { UserRole } from "../../user/utilities/UserRole";
@@ -126,13 +126,24 @@ export class EventController {
       const creator = await getRepository(User).findOne({
         where: { id: foundEvent.creatorId },
       });
-      await NotificationService.createEventNotification(
-        creator.id,
-        NotificationType.EVENT_CONFIRMED,
-        foundEvent.id,
-        foundEvent.name,
-        creator.pushToken
-      );
+      const eventPlayers = await getRepository(Invitations)
+        .createQueryBuilder("r")
+        .leftJoinAndSelect("r.receiver", "receiver")
+        .where("r.eventId = :eventId", { eventId: foundEvent.id })
+        .andWhere("r.status = :status", { status: RequestStatus.CONFIRMED })
+        .getMany();
+      const mappedPlayers = eventPlayers.map((eventPlayer) => eventPlayer.receiver);
+
+      for (const player of mappedPlayers) {
+        await NotificationService.createEventNotification(
+          player.id,
+          NotificationType.EVENT_CONFIRMED,
+          foundEvent.id,
+          foundEvent.name,
+          player.pushToken,
+          foundEvent.sport
+        );
+      }
 
       return response.status(HttpStatusCode.OK).send(new SuccessResponse(event));
     } catch (err) {
@@ -176,7 +187,8 @@ export class EventController {
           NotificationType.EVENT_DELETED_BY_USER_BEFORE_CONFIRMATION,
           event.id,
           event.name,
-          complexAdmin.pushToken
+          complexAdmin.pushToken,
+          event.sport
         );
       }
       if (response.locals.jwt.userRole === UserRole.COMPNAY) {
@@ -188,7 +200,8 @@ export class EventController {
           NotificationType.EVENT_REFUSED_BY_COMPLEX,
           event.id,
           event.name,
-          creator.pushToken
+          creator.pushToken,
+          event.sport
         );
       }
 
@@ -249,7 +262,8 @@ export class EventController {
           NotificationType.EVENT_CANCELED_BY_USER_AFTER_CONFIRMATION,
           event.id,
           event.name,
-          complexAdmin.pushToken
+          complexAdmin.pushToken,
+          event.sport
         );
       }
       if (response.locals.jwt.userRole === UserRole.COMPNAY) {
@@ -262,7 +276,8 @@ export class EventController {
           NotificationType.EVENT_CANCELED_BY_COMPLEX_AFTER_CONFIRMATION,
           event.id,
           event.name,
-          creator.pushToken
+          creator.pushToken,
+          event.sport
         );
       }
 
