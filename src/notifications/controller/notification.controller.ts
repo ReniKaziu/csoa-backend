@@ -51,4 +51,22 @@ export class NotificationController {
       return response.status(400).send(new ErrorResponse(err));
     }
   };
+
+  static updateChatNotification = async (request: Request, response: Response) => {
+    try {
+      const originalNotification = await NotificationService.findById(+request.params.id);
+      if (Helper.isDefined(originalNotification)) {
+        const updatedNotification = await NotificationService.updateChatNotification(
+          originalNotification,
+          request.body
+        );
+        return response.status(HttpStatusCode.OK).send(new SuccessResponse(updatedNotification));
+      } else {
+        return response.status(HttpStatusCode.NOT_FOUND).send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
+      }
+    } catch (err) {
+      console.log(err);
+      return response.status(400).send(new ErrorResponse(err));
+    }
+  };
 }

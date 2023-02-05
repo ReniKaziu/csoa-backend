@@ -76,6 +76,18 @@ export class NotificationService {
     }
   };
 
+  static updateChatNotification = async (notification: Notification, body: any) => {
+    const notificationRepository = getRepository(Notification);
+
+    try {
+      await notificationRepository.update({ id: notification.id }, { readIds: JSON.stringify(body.readIds) });
+
+      return "Njoftimi chat u perditesua";
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   static pushChatNotification = async (request: Request, response: Response) => {
     try {
       const userRepository = getRepository(User);

@@ -29,5 +29,11 @@ export class NotificationRouter {
       PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.COMPNAY, UserRole.ADMIN]),
       NotificationController.updateNotification,
     ]);
+
+    app.patch("/notifications/:id/chat", [
+      AuthenticationMiddleware.checkJwtToken,
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.COMPNAY, UserRole.ADMIN]),
+      NotificationController.updateChatNotification,
+    ]);
   };
 }
