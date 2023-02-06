@@ -178,8 +178,8 @@ export class UserController {
     response.status(HttpStatusCode.OK).send();
   };
 
-  public static patchMe = async (request: Request, response: Response) => {
-    const [result, error] = await UserService.patchMe(request, response);
+  public static patchMyPassword = async (request: Request, response: Response) => {
+    const [result, error] = await UserService.patchMyPassword(request, response);
     if (error) {
       return response.status(402).send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
     }

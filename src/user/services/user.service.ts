@@ -416,13 +416,13 @@ export class UserService {
     return finalUser;
   };
 
-  public static patchMe = async (request: Request, response: Response) => {
+  public static patchMyPassword = async (request: Request, response: Response) => {
     const userRepository = getRepository(User);
     try {
       const isMatchingUser = await userRepository.findOneOrFail({
         where: {
           email: request.body.email,
-          id: response.locals.jwt.userId,
+          id: request.params.userId,
         },
       });
 

@@ -1,7 +1,10 @@
 import * as express from "express";
+import { PermissionMiddleware } from "../common/middlewares/permission.middleware";
+import { UserRole } from "../user/utilities/UserRole";
 // import { ProfileMiddleware } from "./middlewares/profile.middleware";
 import { AuthenticationController } from "./controllers/authentication.controller";
 import { ProfileController } from "./controllers/profile.controller";
+import { AuthenticationMiddleware } from "./middlewares/authentication.middleware";
 // import { UserMiddleware } from "../user/middlewares/user.middleware";
 
 export class AuthenticationRouter {

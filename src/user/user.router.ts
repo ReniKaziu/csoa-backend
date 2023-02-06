@@ -97,11 +97,12 @@ export class UserRouter {
     //   UserController.deleteSport,
     // ]);
 
-    app.patch("/me/change-me", [
+    app.patch("/me/:userId/change-my-password", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([UserRole.USER]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.COMPNAY]),
       UserMiddleware.validationPasswordInput,
-      UserController.patchMe,
+      PermissionMiddleware.checkIfMe,
+      UserController.patchMyPassword,
     ]);
 
     app.post("/users/:userId/attachments", [
