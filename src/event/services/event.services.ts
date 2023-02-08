@@ -43,7 +43,7 @@ export class EventService {
       relations: ["team"],
     });
 
-    const myTeamsIds = myTeams.map((player) => player.team.id).push(-1);
+    const myTeamsIds = myTeams.length ? myTeams.map((player) => player.team.id) : [-1];
 
     const queryBuilder = eventsRepository
       .createQueryBuilder("event")

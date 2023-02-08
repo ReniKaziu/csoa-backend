@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { ErrorResponse } from "../utilities/ErrorResponse";
 import { ERROR_MESSAGES } from "../utilities/ErrorMessages";
 import { UserRole } from "../../user/utilities/UserRole";
-import { getRepository } from "typeorm";
+import { Brackets, getRepository } from "typeorm";
 import { Complex } from "../../complex/entities/complex.entity";
 import { Event } from "../../event/entities/event.entity";
 import { Team } from "../../team/entities/team.entity";
@@ -83,8 +83,16 @@ export class PermissionMiddleware {
     } else if (userRole === UserRole.USER) {
       const event = await getRepository(Event)
         .createQueryBuilder("e")
+        .leftJoinAndSelect("e.organiserTeam", "oTeam")
+        .leftJoinAndSelect("e.receiverTeam", "rTeam")
         .where("e.id = :eventId", { eventId: req.params.eventId })
-        .andWhere("e.creatorId = :id", { id: userId })
+        .andWhere(
+          new Brackets((qb) => {
+            qb.where("e.creatorId = :id", { id: userId });
+            qb.orWhere("oTeam.userId = :oTeamCreatorId", { oTeamCreatorId: userId });
+            qb.orWhere("rTeam.userId = :rTeamCreatorId", { rTeamCreatorId: userId });
+          })
+        )
         .withDeleted()
         .getOne();
       if (event) {

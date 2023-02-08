@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { User } from "../../user/entities/user.entity";
 import { Team } from "../../team/entities/team.entity";
-import { Brackets, getCustomRepository, Not } from "typeorm";
+import { Brackets, getCustomRepository, getRepository, Not } from "typeorm";
 import { Event, EventStatus } from "../../event/entities/event.entity";
 import { UserRepository } from "../../user/repositories/user.repository";
 import { RequestRepository } from "../repositories/request.repository";
@@ -264,6 +264,10 @@ export class RequestService {
               originalRequest.event.sport
             );
           }
+          await getRepository(Event).update(
+            { id: originalRequest.eventId },
+            { receiverTeamId: originalRequest.receiverTeamId }
+          );
         } else {
           const invitedUser = await UserService.findOne(originalRequest.receiverId);
 
@@ -295,7 +299,7 @@ export class RequestService {
               originalRequest.event.name,
               teamPlayer.player.pushToken,
               originalRequest.event.sport,
-              originalRequest.receiver.name
+              originalRequest.receiverTeam.name
             );
           }
 
@@ -311,6 +315,11 @@ export class RequestService {
             originalRequest.event.name,
             eventCreator.pushToken,
             originalRequest.receiverTeam.name
+          );
+
+          await getRepository(Event).update(
+            { id: originalRequest.eventId },
+            { receiverTeamId: originalRequest.receiverTeamId }
           );
         } else {
           const creator = await UserService.findOne(originalRequest.event.creatorId);

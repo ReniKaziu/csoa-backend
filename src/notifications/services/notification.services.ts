@@ -434,7 +434,6 @@ export class NotificationService {
         body: "Futuni ne aplikacion dhe shikoni me shume",
       },
     };
-    console.log(titles[notificationType]);
 
     const pushNotificationBody = {
       to: userToken ?? "123",
