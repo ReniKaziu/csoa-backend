@@ -91,6 +91,8 @@ export class PermissionMiddleware {
             qb.where("e.creatorId = :id", { id: userId });
             qb.orWhere("oTeam.userId = :oTeamCreatorId", { oTeamCreatorId: userId });
             qb.orWhere("rTeam.userId = :rTeamCreatorId", { rTeamCreatorId: userId });
+            qb.orWhere("e.organiserTeamId = :organiserTeamId", { organiserTeamId: userId });
+            qb.orWhere("e.receiverTeamId = :receiverTeamId", { receiverTeamId: userId });
           })
         )
         .withDeleted()

@@ -85,7 +85,6 @@ export class EventRouter {
     app.patch("/events/:eventId/single-event", [
       AuthenticationMiddleware.checkJwtToken,
       PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.COMPNAY, UserRole.ADMIN]),
-      PermissionMiddleware.checkIfEventCreatorOrCompany,
       EventController.patchSingleEvent,
     ]);
   };
