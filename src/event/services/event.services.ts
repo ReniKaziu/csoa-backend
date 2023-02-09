@@ -765,6 +765,8 @@ export class EventService {
         playersAge,
         playersNumber,
         isWeekly,
+        organiserTeamCaptainId,
+        receiverTeamCaptainId,
         level,
       },
     } = request;
@@ -775,6 +777,8 @@ export class EventService {
     let eventToBeConfirmed = false;
     let eventToBeConfirmedByUser = false;
     let eventToBeCompleted = false;
+    let pushNotificationToOrganiserTeamCaptain = false;
+    let pushNotificationToReceiverTeamCaptain = false;
     if (currentEvent.status === EventStatus.WAITING_FOR_CONFIRMATION) {
       eventToBeConfirmed = true;
     }
@@ -783,6 +787,12 @@ export class EventService {
     }
     if (currentEvent.status == EventStatus.CONFIRMED && currentEvent.isConfirmedByUser === true) {
       eventToBeCompleted = true;
+    }
+    if (organiserTeamCaptainId && currentEvent.organiserTeamCaptainId !== organiserTeamCaptainId) {
+      pushNotificationToOrganiserTeamCaptain = true;
+    }
+    if (receiverTeamCaptainId && currentEvent.receiverTeamCaptainId !== receiverTeamCaptainId) {
+      pushNotificationToReceiverTeamCaptain = true;
     }
 
     const startDateToQuery = startDate ? startDate : currentEvent.startDate.toISOString();
@@ -832,6 +842,38 @@ export class EventService {
         const mergedEvent = queryRunner.manager.merge(Event, currentEvent, eventPayload);
         updatedEvent = await queryRunner.manager.save(mergedEvent);
         await queryRunner.commitTransaction();
+
+        if (pushNotificationToOrganiserTeamCaptain) {
+          const organiserTeamCaptain = await userRepository
+            .createQueryBuilder("u")
+            .where("u.id = :id", { id: updatedEvent.organiserTeamCaptainId })
+            .getOne();
+
+          NotificationService.createRequestNotification(
+            updatedEvent.organiserTeamCaptainId,
+            NotificationType.ORGANISER_TEAM_CAPTAION,
+            currentEvent.id,
+            currentEvent.name,
+            organiserTeamCaptain.pushToken,
+            currentEvent.sport
+          );
+        }
+
+        if (pushNotificationToReceiverTeamCaptain) {
+          const receiverTeamCaptain = await userRepository
+            .createQueryBuilder("u")
+            .where("u.id = :id", { id: updatedEvent.receiverTeamCaptainId })
+            .getOne();
+
+          NotificationService.createRequestNotification(
+            updatedEvent.receiverTeamCaptainId,
+            NotificationType.RECEIVER_TEAM_CAPTAION,
+            currentEvent.id,
+            currentEvent.name,
+            receiverTeamCaptain.pushToken,
+            currentEvent.sport
+          );
+        }
 
         if (eventToBeConfirmed === true && updatedEvent.status === EventStatus.CONFIRMED) {
           if (currentEvent.isTeam) {

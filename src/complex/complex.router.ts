@@ -71,6 +71,19 @@ export class ComplexRouter {
       ComplexController.upsert,
     ]);
 
+    app.post("/complexes/:complexId/attachments", [
+      AuthenticationMiddleware.checkJwtToken,
+      PermissionMiddleware.checkAllowedPermissions([UserRole.COMPNAY]),
+      UploadMiddleware.validateFileUpload("file", ["jpg", "png", "jpeg"], 8),
+      ComplexController.upload,
+    ]);
+
+    app.delete("/complexes/:complexId/attachments/:attachmentId", [
+      AuthenticationMiddleware.checkJwtToken,
+      PermissionMiddleware.checkAllowedPermissions([UserRole.COMPNAY]),
+      ComplexController.deleteAttachmentById,
+    ]);
+
     app.get("/v2/complexes/:userId/locations", [
       AuthenticationMiddleware.checkJwtToken,
       PermissionMiddleware.checkAllowedPermissions([UserRole.COMPNAY]),

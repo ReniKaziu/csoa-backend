@@ -123,7 +123,9 @@ export class NotificationService {
             body: body.payload.message,
           },
         };
-        const insideUserChatJson = JSON.stringify({ userId: Number(senderId) });
+
+        const roomId = receiverId > senderId ? `${senderId}${receiverId}` : `${receiverId}${senderId}`;
+        const insideUserChatJson = JSON.stringify({ userId: Number(roomId) });
         if (JSON.stringify(receiverUser.roomId) !== insideUserChatJson) {
           const pushNotifications = [];
           const pushNotificationBody = {
@@ -421,6 +423,8 @@ export class NotificationService {
       [NotificationType.TEAM_CONFIRMED_INVITATION]: `Ekipi ${senderName} pranoi ftesen ne eventin ${eventName} per ${sportsMapped[sport]}`,
       [NotificationType.TEAM_REQUEST_TO_EVENT_REFUSED]: `Na vjen keq por eshte plotesuar numri i ekipeve`,
       [NotificationType.TEAM_REFUSED_INVITATION]: `Ekipi ${senderName} refuzoi ftesen ne eventin ${eventName} per ${sportsMapped[sport]}`,
+      [NotificationType.ORGANISER_TEAM_CAPTAION]: `Ju jeni zgjedhur kapiten ne eventin ${eventName} per ${sportsMapped[sport]}`,
+      [NotificationType.RECEIVER_TEAM_CAPTAION]: `Ju jeni zgjedhur kapiten ne eventin ${eventName} per ${sportsMapped[sport]}`,
     };
 
     const notificationBody = {

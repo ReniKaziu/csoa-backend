@@ -3,6 +3,7 @@ import { join } from "path";
 const fs = require("fs");
 import { ConnectionIsNotSetError, getCustomRepository, getRepository } from "typeorm";
 import { Attachment } from "../../attachment/entities/attachment.entity";
+import { AtachmentRepository } from "../../attachment/repositories/attachment.repository";
 import { File } from "../../common/utilities/File";
 import { EventStatus } from "../../event/entities/event.entity";
 import { EventRepository } from "../../event/repositories/event.repository";
@@ -102,6 +103,34 @@ export class ComplexService {
       where: { id: request.params.id },
     });
   }
+
+  static upload = async (request: Request, response: Response) => {
+    if (request.files.length) {
+      const complexId = +request.params.complexId;
+      const files = [...(request.files as any)];
+      const attachmentRepository = getCustomRepository(AtachmentRepository);
+      return attachmentRepository
+        .createQueryBuilder("attachments")
+        .insert()
+        .into(Attachment)
+        .values(
+          files.map((file) => {
+            return {
+              name: file.filename,
+              originalName: file.originalname,
+              mimeType: file.mimetype,
+              extension: file.mimetype.split("/")[1],
+              sizeInBytes: file.size,
+              path: file.path,
+              teamId: null,
+              userId: null,
+              complexId,
+            };
+          })
+        )
+        .execute();
+    }
+  };
 
   static getEvents(id: number) {
     const eventRepository = getCustomRepository(EventRepository);

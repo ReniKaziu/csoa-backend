@@ -8,6 +8,8 @@ import { User } from "../../user/entities/user.entity";
 export enum NotificationType {
   EVENT_CREATED = "event created",
   EVENT_CONFIRMED = "event confirmed",
+  ORGANISER_TEAM_CAPTAION = "organiser team captain",
+  RECEIVER_TEAM_CAPTAION = "receiver team captain",
   EVENT_CONFIRMED_BY_USER = "event confirmed by user",
   EVENT_REFUSED_BY_COMPLEX = "event refused by complex",
   EVENT_DELETED_BY_USER_BEFORE_CONFIRMATION = "event deleted by user before confirmation",

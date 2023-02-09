@@ -33,6 +33,8 @@ export class AuthenticationRouter {
 
     app.post("/profile/forgot-password", [ProfileController.forgotPassword]);
 
+    app.post("/profile/confirm-code", [ProfileController.confirmCode]);
+
     app.post("/profile/change-password", [ProfileController.changePassword]);
 
     //     app.get("/profile/me", [

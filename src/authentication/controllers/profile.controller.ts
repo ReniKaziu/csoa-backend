@@ -179,6 +179,24 @@ export class ProfileController {
     }
   };
 
+  static confirmCode = async (req: Request, res: Response) => {
+    const { token } = req.body;
+
+    const userRepository = getRepository(User);
+
+    let userExist = await userRepository.findOne({
+      where: {
+        modifyPasswordToken: token,
+      },
+    });
+
+    if (userExist) {
+      res.status(200).send({ data: "success" });
+    } else {
+      res.status(400).send(new ErrorResponse(ERROR_MESSAGES.TOKEN_EXPIRED));
+    }
+  };
+
   //   static me = async (req: Request, res: Response) => {
   //     const userRepository = getRepository(User);
 
