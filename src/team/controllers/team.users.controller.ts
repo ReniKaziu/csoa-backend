@@ -84,7 +84,7 @@ export class TeamUsersController {
     try {
       const teamUser = await TeamUsersService.getOne(+request.params.teamUserId);
       if (Helper.isDefined(teamUser)) {
-        await TeamUsersService.deleteById(teamUser);
+        await TeamUsersService.deleteById(teamUser, response);
         return response.status(HttpStatusCode.OK).send(new SuccessResponse("Successfully deleted"));
       } else {
         return response.status(HttpStatusCode.NOT_FOUND).send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));

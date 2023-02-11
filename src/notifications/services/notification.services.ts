@@ -363,6 +363,7 @@ export class NotificationService {
       [NotificationType.INVITATION_TO_TEAM_CONFIRMED]: `Lojtari ${senderName} pranoi ftesen tek ekipi: ${teamName} per ${sport}`,
       [NotificationType.INVITATION_TO_TEAM_REFUSED]: `Lojtari ${senderName} refuzoi ftesen tek ekipi: ${teamName} per ${sport}`,
       [NotificationType.USER_EXITED_TEAM]: `Lojtari ${senderName} eshte larguar nga ekipi: ${teamName}`,
+      [NotificationType.USER_EXCLUDED_FROM_TEAM]: `Krijuesi ${senderName} ju largoi nga ekipi: ${teamName}`,
     };
 
     const notificationBody = {

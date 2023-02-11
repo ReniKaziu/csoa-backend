@@ -123,12 +123,14 @@ export class ProfileController {
         if (email) {
           const mailer = new Mailer();
           mailer.sendMail(userExist.email, subject, htmlBody);
-          return res.sendStatus(200);
+          return res.sendStatus(200).send({ data: code });
+          // return res.sendStatus(200);
         } else {
           UserService.checkPhoneNumber(
             phoneNumber,
             () => {
-              return res.status(200).send(new SuccessResponse("Verification code sent"));
+              return res.status(200).send({ data: code });
+              // return res.status(200).send(new SuccessResponse("Verification code sent"));
             },
             (err) => {
               console.log({ err });

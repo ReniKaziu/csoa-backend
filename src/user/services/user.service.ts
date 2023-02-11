@@ -423,6 +423,7 @@ export class UserService {
         where: {
           email: request.body.email,
           id: request.params.userId,
+          password: Md5.init(request.body.currentPassword),
         },
       });
 

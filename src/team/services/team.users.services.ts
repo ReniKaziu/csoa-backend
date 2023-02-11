@@ -188,20 +188,32 @@ export class TeamUsersService {
     return "Request successfully updated!";
   };
 
-  static deleteById = async (teamUser: TeamUsers) => {
+  static deleteById = async (teamUser: TeamUsers, response: Response) => {
     const teamUserRepository = getRepository(TeamUsers);
     await teamUserRepository.softDelete(teamUser.id);
 
-    if (teamUser.status === TeamUserStatus.CONFIRMED) {
+    if (response.locals.jwt.userId === teamUser.team.userId) {
       await NotificationService.createTeamUserNotification(
-        teamUser.team.userId,
-        NotificationType.USER_EXITED_TEAM,
+        teamUser.playerId,
+        NotificationType.USER_EXCLUDED_FROM_TEAM,
         teamUser.team.name,
         teamUser.teamId,
-        teamUser.team.user.pushToken,
+        teamUser.player.pushToken,
         teamUser.team.sport,
-        teamUser.player.name
+        teamUser.team.user.name
       );
+    } else {
+      if (teamUser.status === TeamUserStatus.CONFIRMED) {
+        await NotificationService.createTeamUserNotification(
+          teamUser.team.userId,
+          NotificationType.USER_EXITED_TEAM,
+          teamUser.team.name,
+          teamUser.teamId,
+          teamUser.team.user.pushToken,
+          teamUser.team.sport,
+          teamUser.player.name
+        );
+      }
     }
   };
 }

@@ -767,6 +767,7 @@ export class EventService {
         isWeekly,
         organiserTeamCaptainId,
         receiverTeamCaptainId,
+        isConfirmedByUser,
         level,
       },
     } = request;
@@ -935,6 +936,27 @@ export class EventService {
             .select("u.name")
             .where("u.id = :creatorId", { creatorId: currentEvent.creatorId })
             .getOne();
+
+          const eventPlayers = await requestRepository
+            .createQueryBuilder("r")
+            .leftJoinAndSelect("r.receiver", "receiver")
+            .where("r.eventId = :eventId", { eventId: currentEvent.id })
+            .andWhere("r.status = :status", { status: RequestStatus.CONFIRMED })
+            .getMany();
+
+          const mappedPlayers = eventPlayers.map((eventPlayer) => eventPlayer.receiver);
+          for (const player of mappedPlayers) {
+            if (player.id !== eventCreator.id) {
+              NotificationService.createRequestNotification(
+                player.id,
+                NotificationType.EVENT_CONFIRMED_BY_USER,
+                currentEvent.id,
+                currentEvent.name,
+                player.pushToken,
+                currentEvent.sport
+              );
+            }
+          }
 
           NotificationService.createRequestNotification(
             complexAdmin.id,
