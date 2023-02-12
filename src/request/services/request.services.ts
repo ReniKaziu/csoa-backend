@@ -203,6 +203,7 @@ export class RequestService {
     const request = await requestRepository
       .createQueryBuilder("request")
       .leftJoinAndSelect("request.event", "e")
+      .leftJoinAndSelect("e.creator", "c")
       .leftJoinAndSelect("request.receiver", "r")
       .leftJoinAndSelect("request.receiverTeam", "receiverTeam")
       .where("request.id = :id", { id: requestId })
@@ -210,18 +211,91 @@ export class RequestService {
     return request;
   };
 
-  static deleteById = async (request: Invitation) => {
+  static deleteById = async (request: Invitation, response: Response) => {
     const requestRepository = getCustomRepository(RequestRepository);
+    const eventRepository = getCustomRepository(EventRepository);
+    const teamUsersRepository = getCustomRepository(TeamUsersRepository);
     await requestRepository.delete(request.id);
 
-    await NotificationService.createRequestNotification(
-      request.receiver.id,
-      NotificationType.INVITATION_DELETED,
-      request.event.id,
-      request.event.name,
-      request.receiver.pushToken,
-      request.event.sport
-    );
+    if (response.locals.jwt.userId === request.event.creatorId) {
+      const creator = await UserService.findOne(response.locals.jwt.userId);
+      if (request.receiverTeamId) {
+        const teamPlayers = await teamUsersRepository
+          .createQueryBuilder("tu")
+          .leftJoinAndSelect("tu.player", "player")
+          .leftJoinAndSelect("tu.team", "team")
+          .where("tu.status = :status", { status: RequestStatus.CONFIRMED })
+          .andWhere("tu.teamId = :teamId", { teamId: request.receiverTeamId })
+          .getMany();
+
+        for (const teamPlayer of teamPlayers) {
+          await NotificationService.createRequestNotification(
+            teamPlayer.player.id,
+            NotificationType.TEAM_EXCLUDED_FROM_EVENT,
+            request.eventId,
+            request.event.name,
+            teamPlayer.player.pushToken,
+            request.event.sport,
+            creator.name
+          );
+        }
+        await eventRepository.update({ id: request.eventId }, { receiverTeamId: null });
+      } else {
+        await NotificationService.createRequestNotification(
+          request.receiverId,
+          NotificationType.CREATOR_EXCLUDED_FROM_EVENT,
+          request.eventId,
+          request.event.name,
+          request.receiver.pushToken,
+          request.event.sport,
+          request.event.creator.name
+        );
+      }
+    } else {
+      if (request.receiverTeamId) {
+        const creator = await UserService.findOne(request.event.creatorId);
+        const teamPlayers = await teamUsersRepository
+          .createQueryBuilder("tu")
+          .leftJoinAndSelect("tu.player", "player")
+          .leftJoinAndSelect("tu.team", "team")
+          .where("tu.status = :status", { status: RequestStatus.CONFIRMED })
+          .andWhere("tu.teamId = :teamId", { teamId: request.receiverTeamId })
+          .getMany();
+
+        for (const teamPlayer of teamPlayers) {
+          await NotificationService.createRequestNotification(
+            teamPlayer.player.id,
+            NotificationType.TEAM_LEFT_EVENT,
+            request.eventId,
+            request.event.name,
+            teamPlayer.player.pushToken,
+            request.event.sport,
+            teamPlayer.team.name
+          );
+          await NotificationService.createRequestNotification(
+            creator.id,
+            NotificationType.TEAM_LEFT_EVENT,
+            request.eventId,
+            request.event.name,
+            creator.pushToken,
+            request.event.sport,
+            request.receiverTeam.name
+          );
+          await eventRepository.update({ id: request.eventId }, { receiverTeamId: null });
+        }
+      } else {
+        const creator = await UserService.findOne(request.event.creatorId);
+        await NotificationService.createRequestNotification(
+          creator.id,
+          NotificationType.USER_LEFT_EVENT,
+          request.eventId,
+          request.event.name,
+          creator.pushToken,
+          request.event.sport,
+          request.receiver.name
+        );
+      }
+    }
   };
 
   static updateRequest = async (requestPayload, originalRequest: Invitation, request: Request) => {

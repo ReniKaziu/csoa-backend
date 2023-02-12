@@ -83,7 +83,7 @@ export class RequestController {
     try {
       const invitation = await RequestService.findById(+request.params.invitationId);
       if (Helper.isDefined(invitation)) {
-        await RequestService.deleteById(invitation);
+        await RequestService.deleteById(invitation, response);
         return response.status(HttpStatusCode.OK).send(new SuccessResponse("Successfully deleted"));
       } else {
         return response.status(HttpStatusCode.NOT_FOUND).send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
