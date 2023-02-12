@@ -451,15 +451,17 @@ export class RequestService {
             .getMany();
 
           for (const teamPlayer of teamPlayers) {
-            await NotificationService.createRequestNotification(
-              teamPlayer.player.id,
-              NotificationType.TEAM_REFUSED_INVITATION,
-              originalRequest.eventId,
-              originalRequest.event.name,
-              teamPlayer.player.pushToken,
-              originalRequest.event.sport,
-              originalRequest.receiverTeam.name
-            );
+            if (teamPlayer.playerId !== originalRequest.receiverTeam.userId) {
+              await NotificationService.createRequestNotification(
+                teamPlayer.player.id,
+                NotificationType.TEAM_REFUSED_INVITATION,
+                originalRequest.eventId,
+                originalRequest.event.name,
+                teamPlayer.player.pushToken,
+                originalRequest.event.sport,
+                originalRequest.receiverTeam.name
+              );
+            }
           }
 
           const eventCreator = await userRepository

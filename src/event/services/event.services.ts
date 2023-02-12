@@ -504,15 +504,17 @@ export class EventService {
           .getMany();
 
         for (const teamPlayer of teamPlayers) {
-          await NotificationService.createRequestNotification(
-            teamPlayer.player.id,
-            NotificationType.TEAM_CREATOR_CREATED_EVENT,
-            event.id,
-            event.name,
-            teamPlayer.player.pushToken,
-            event.sport,
-            teamPlayer.team.name
-          );
+          if (teamPlayer.playerId !== event.creatorId) {
+            await NotificationService.createRequestNotification(
+              teamPlayer.player.id,
+              NotificationType.TEAM_CREATOR_CREATED_EVENT,
+              event.id,
+              event.name,
+              teamPlayer.player.pushToken,
+              event.sport,
+              teamPlayer.team.name
+            );
+          }
         }
       } else {
         element = {
