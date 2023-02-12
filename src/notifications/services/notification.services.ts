@@ -426,6 +426,7 @@ export class NotificationService {
       [NotificationType.TEAM_REFUSED_INVITATION]: `Ekipi ${senderName} refuzoi ftesen ne eventin ${eventName} per ${sportsMapped[sport]}`,
       [NotificationType.ORGANISER_TEAM_CAPTAION]: `Ju jeni zgjedhur kapiten ne eventin ${eventName} per ${sportsMapped[sport]}`,
       [NotificationType.RECEIVER_TEAM_CAPTAION]: `Ju jeni zgjedhur kapiten ne eventin ${eventName} per ${sportsMapped[sport]}`,
+      [NotificationType.TEAM_CREATOR_CREATED_EVENT]: `Krijuesi i skuadres ${senderName} krijoi eventin ${eventName} per ${sportsMapped[sport]}`,
     };
 
     const notificationBody = {

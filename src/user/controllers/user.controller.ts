@@ -183,7 +183,7 @@ export class UserController {
     if (error) {
       return response.status(402).send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
     }
-    return response.status(200).send(new SuccessResponse(result));
+    return response.status(200).send(new SuccessResponse("success"));
   };
 
   public static checkAvailability = async (request: Request, response: Response) => {

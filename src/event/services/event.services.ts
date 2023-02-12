@@ -483,15 +483,46 @@ export class EventService {
 
   static createRequest = async (events: Event[]) => {
     const requestRepository = getCustomRepository(RequestRepository);
+    const teamUsersRepository = getCustomRepository(TeamUsersRepository);
     const payload = [];
     for (const event of events) {
-      const element = {
-        senderId: event.creatorId,
-        receiverId: event.creatorId,
-        eventId: event.id,
-        sport: event.sport,
-        status: RequestStatus.CONFIRMED,
-      };
+      let element;
+      if (event.isTeam) {
+        element = {
+          senderTeamId: event.organiserTeamId,
+          receiverTeamId: event.organiserTeamId,
+          eventId: event.id,
+          sport: event.sport,
+          status: RequestStatus.CONFIRMED,
+        };
+        const teamPlayers = await teamUsersRepository
+          .createQueryBuilder("tu")
+          .leftJoinAndSelect("tu.player", "player")
+          .leftJoinAndSelect("tu.team", "team")
+          .where("tu.status = :status", { status: RequestStatus.CONFIRMED })
+          .andWhere("tu.teamId = :teamId", { teamId: event.organiserTeamId })
+          .getMany();
+
+        for (const teamPlayer of teamPlayers) {
+          await NotificationService.createRequestNotification(
+            teamPlayer.player.id,
+            NotificationType.TEAM_CREATOR_CREATED_EVENT,
+            event.id,
+            event.name,
+            teamPlayer.player.pushToken,
+            event.sport,
+            teamPlayer.team.name
+          );
+        }
+      } else {
+        element = {
+          senderId: event.creatorId,
+          receiverId: event.creatorId,
+          eventId: event.id,
+          sport: event.sport,
+          status: RequestStatus.CONFIRMED,
+        };
+      }
       payload.push(element);
     }
     await requestRepository.createQueryBuilder("request").insert().values(payload).execute();

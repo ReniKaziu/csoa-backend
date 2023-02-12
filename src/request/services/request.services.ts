@@ -314,6 +314,7 @@ export class RequestService {
             originalRequest.eventId,
             originalRequest.event.name,
             eventCreator.pushToken,
+            originalRequest.event.sport,
             originalRequest.receiverTeam.name
           );
 

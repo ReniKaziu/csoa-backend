@@ -100,7 +100,6 @@ export class UserRouter {
     app.patch("/me/:userId/change-my-password", [
       AuthenticationMiddleware.checkJwtToken,
       PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.COMPNAY]),
-      UserMiddleware.validationPasswordInput,
       PermissionMiddleware.checkIfMe,
       UserController.patchMyPassword,
     ]);
