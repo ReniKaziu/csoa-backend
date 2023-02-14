@@ -30,4 +30,7 @@ export class CreateUserDto {
 
   @IsOptional()
   lastSeen: string;
+
+  @IsOptional()
+  roomId: string;
 }
