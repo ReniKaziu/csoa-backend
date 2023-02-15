@@ -23,6 +23,14 @@ export class NotificationService {
       queryBuilder.andWhere("notification.type IN (:...types)", {
         types: [NotificationType.CHAT_EVENT, NotificationType.CHAT_TEAM, NotificationType.CHAT_USER],
       });
+      queryBuilder.orWhere(
+        new Brackets((qb) =>
+          qb
+            .where(`notification.sent_ids LIKE '[${userId},%'`)
+            .orWhere(`notification.sent_ids LIKE ',${userId},'`)
+            .orWhere(`notification.sent_ids LIKE '%,${userId}]'`)
+        )
+      );
     } else {
       queryBuilder.andWhere("notification.type NOT IN (:...types)", {
         types: [NotificationType.CHAT_EVENT, NotificationType.CHAT_TEAM, NotificationType.CHAT_USER],
@@ -170,13 +178,14 @@ export class NotificationService {
           .select("user.name")
           .where("user.id = :senderId", { senderId })
           .getOne();
+        const sentPlayers = teamPlayers.map((teamPlayer) => teamPlayer.playerId);
         const sentIds = [];
         const notifications = [];
         const notificationBody = {
           senderId: senderId,
           teamId: body.payload.teamId,
           type: NotificationType.CHAT_TEAM,
-          sentIds: JSON.stringify(sentIds),
+          sentIds: JSON.stringify(sentPlayers),
           readIds: JSON.stringify([senderId]),
           payload: {
             teamId: body.payload.teamId,
@@ -209,6 +218,7 @@ export class NotificationService {
 
       if (body.type === NotificationType.CHAT_EVENT) {
         const requestsRepository = getRepository(Invitation);
+        const teamUsersRepository = getRepository(TeamUsers);
         const eventsRepository = getRepository(Event);
         const senderId = response.locals.jwt.userId;
         const event = await eventsRepository
@@ -227,12 +237,106 @@ export class NotificationService {
           .select("user.name")
           .where("user.id = :senderId", { senderId })
           .getOne();
+
+        let sentPlayers = [];
         const sentIds = [];
+        if (event.isTeam) {
+          const organiserTeamPlayers = await teamUsersRepository
+            .createQueryBuilder("tu")
+            .leftJoinAndSelect("tu.player", "player")
+            .where("tu.teamId = :teamId", { teamId: event.organiserTeamId })
+            .andWhere("tu.status = :status", { status: RequestStatus.CONFIRMED })
+            .getMany();
+          const receiverTeamPlayers = await teamUsersRepository
+            .createQueryBuilder("tu")
+            .leftJoinAndSelect("tu.player", "player")
+            .where("tu.teamId = :teamId", { teamId: event.receiverTeamId })
+            .andWhere("tu.status = :status", { status: RequestStatus.CONFIRMED })
+            .getMany();
+
+          const pushNotifications = [];
+          for (const teamPlayer of organiserTeamPlayers) {
+            const insideEventChatJson = JSON.stringify({ eventId: event.id });
+            if (JSON.stringify(teamPlayer.player.roomId) !== insideEventChatJson) {
+              sentIds.push(teamPlayer.playerId);
+              if (teamPlayer.playerId !== senderId) {
+                const pushNotificationBody = {
+                  to: teamPlayer.player.pushToken ?? "123",
+                  title: `Mesazh i ri nga ${senderName.name}`,
+                  body: body.payload.message,
+                  data: {
+                    eventId: body.payload.eventId,
+                    eventName: event.name,
+                    eventStartDate: event.startDate,
+                    eventEndDate: event.endDate,
+                  },
+                };
+                pushNotifications.push(pushNotificationBody);
+              }
+              NotificationService.pushNotification(pushNotifications);
+            }
+          }
+          for (const teamPlayer of receiverTeamPlayers) {
+            const insideEventChatJson = JSON.stringify({ eventId: event.id });
+            if (JSON.stringify(teamPlayer.player.roomId) !== insideEventChatJson) {
+              sentIds.push(teamPlayer.playerId);
+              if (teamPlayer.playerId !== senderId) {
+                const pushNotificationBody = {
+                  to: teamPlayer.player.pushToken ?? "123",
+                  title: `Mesazh i ri nga ${senderName.name}`,
+                  body: body.payload.message,
+                  data: {
+                    eventId: body.payload.eventId,
+                    eventName: event.name,
+                    eventStartDate: event.startDate,
+                    eventEndDate: event.endDate,
+                  },
+                };
+                pushNotifications.push(pushNotificationBody);
+              }
+              NotificationService.pushNotification(pushNotifications);
+            }
+          }
+
+          const organiserTeamPlayersIds = organiserTeamPlayers.map((teamUser) => teamUser.playerId);
+          const receiverTeamPlayersIds = receiverTeamPlayers.map((teamUser) => teamUser.playerId);
+          for (const id of organiserTeamPlayersIds) {
+            sentPlayers.push(id);
+          }
+          for (const id of receiverTeamPlayersIds) {
+            sentPlayers.push(id);
+          }
+        } else {
+          sentPlayers = eventPlayers.map((eventPlayer) => eventPlayer.receiverId);
+          const pushNotifications = [];
+          for (const eventPlayer of eventPlayers) {
+            const insideEventChatJson = JSON.stringify({ eventId: event.id });
+            if (JSON.stringify(eventPlayer.receiver.roomId) !== insideEventChatJson) {
+              sentIds.push(eventPlayer.receiverId);
+              if (eventPlayer.receiverId !== senderId) {
+                const pushNotificationBody = {
+                  to: eventPlayer.receiver.pushToken ?? "123",
+                  title: `Mesazh i ri nga ${senderName.name}`,
+                  body: body.payload.message,
+                  data: {
+                    eventId: body.payload.eventId,
+                    eventName: event.name,
+                    eventStartDate: event.startDate,
+                    eventEndDate: event.endDate,
+                  },
+                };
+                pushNotifications.push(pushNotificationBody);
+              }
+              NotificationService.pushNotification(pushNotifications);
+            }
+          }
+        }
+        let uniqueSentPlayers = [...new Set(sentPlayers)];
         const notifications = [];
         const notificationBody = {
           senderId: senderId,
           eventId: body.payload.eventId,
-          sentIds: JSON.stringify(sentIds),
+          sentIds: JSON.stringify(uniqueSentPlayers),
           readIds: JSON.stringify([senderId]),
           type: NotificationType.CHAT_EVENT,
           payload: {
@@ -244,29 +348,6 @@ export class NotificationService {
             body: body.payload.message,
           },
         };
-
-        const pushNotifications = [];
-        for (const eventPlayer of eventPlayers) {
-          const insideEventChatJson = JSON.stringify({ eventId: event.id });
-          if (JSON.stringify(eventPlayer.receiver.roomId) !== insideEventChatJson) {
-            sentIds.push(eventPlayer.receiverId);
-            if (eventPlayer.receiverId !== senderId) {
-              const pushNotificationBody = {
-                to: eventPlayer.receiver.pushToken ?? "123",
-                title: `Mesazh i ri nga ${senderName.name}`,
-                body: body.payload.message,
-                data: {
-                  eventId: body.payload.eventId,
-                  eventName: event.name,
-                  eventStartDate: event.startDate,
-                  eventEndDate: event.endDate,
-                },
-              };
-              pushNotifications.push(pushNotificationBody);
-            }
-            NotificationService.pushNotification(pushNotifications);
-          }
-        }
         notifications.push(notificationBody);
         NotificationService.storeNotification(notifications);
       }

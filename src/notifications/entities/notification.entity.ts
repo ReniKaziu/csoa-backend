@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne } from "typeorm";
+import { Column, Entity, Index, ManyToOne } from "typeorm";
 import { Common } from "../../common/entities/common";
 import { Complex } from "../../complex/entities/complex.entity";
 import { Event } from "../../event/entities/event.entity";
@@ -62,6 +62,7 @@ export class Notification extends Common {
   })
   public payload: string;
 
+  @Index()
   @Column("varchar", {
     nullable: true,
     name: "type",

@@ -816,7 +816,7 @@ export class EventService {
     if (currentEvent.status === EventStatus.WAITING_FOR_CONFIRMATION) {
       eventToBeConfirmed = true;
     }
-    if (currentEvent.status === EventStatus.CONFIRMED && currentEvent.isConfirmedByUser === false) {
+    if (currentEvent.status === EventStatus.CONFIRMED && currentEvent.isConfirmedByUser == false) {
       eventToBeConfirmedByUser = true;
     }
     if (currentEvent.status == EventStatus.CONFIRMED && currentEvent.isConfirmedByUser === true) {
@@ -958,7 +958,7 @@ export class EventService {
           }
         }
 
-        if (eventToBeConfirmedByUser === true && updatedEvent.isConfirmedByUser) {
+        if (eventToBeConfirmedByUser === true && updatedEvent.isConfirmedByUser == true) {
           const complexAdmin = await userRepository
             .createQueryBuilder("u")
             .where("u.complexId = :id", { id: currentEvent.location.complexId })
@@ -1010,7 +1010,6 @@ export class EventService {
         //     .leftJoinAndSelect("tu.team", "t", "t.id = tu.teamId")
         //     .where("etu.eventId = :eventId", { eventId: updatedEvent.id })
         //     .getMany();
-
         //   const mappedPlayersIds = eventPlayers.map((eventPlayers) => {
         //     return {
         //       id: eventPlayers.teamUser.player.id,
@@ -1044,7 +1043,6 @@ export class EventService {
         //     notifications.push(resultNotificationBody);
         //     notifications.push(reviewNotificationBody);
         //   }
-
         //   await NotificationService.storeNotification(notifications);
         // }
         return updatedEvent;
