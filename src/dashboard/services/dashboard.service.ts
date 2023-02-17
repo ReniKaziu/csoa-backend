@@ -1,4 +1,4 @@
-import { Between, getCustomRepository, getRepository } from "typeorm";
+import { Between, getRepository, In } from "typeorm";
 import { Complex } from "../../complex/entities/complex.entity";
 import { Event, EventStatus } from "../../event/entities/event.entity";
 import { User } from "../../user/entities/user.entity";
@@ -23,7 +23,7 @@ export class DashboardService {
     const events = await eventStatistics.find({
       where: {
         tsCreated: Between(new Date(year, month, 1), new Date(year, month + 1, 1)),
-        status: EventStatus.COMPLETED,
+        status: In([EventStatus.CONFIRMED, EventStatus.COMPLETED]),
       },
       withDeleted: true,
     });
@@ -50,7 +50,7 @@ export class DashboardService {
       .innerJoin("locations", "l", "l.id = e.locationId")
       .innerJoin("complexes", "c", "c.id = l.complexId")
       .where("l.complexId = :complexId", { complexId })
-      .andWhere("e.isDraft IS NULL")
+      .andWhere("e.status IN (:...statuses)", { statuses: [EventStatus.CONFIRMED, EventStatus.COMPLETED] })
       .andWhere("e.startDate > :startDate", {
         startDate: new Date(year, month, 1),
       })

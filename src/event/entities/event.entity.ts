@@ -96,8 +96,12 @@ export class Event extends Common {
   public isDraw: boolean;
 
   @Index()
-  @Column("tinyint", { name: "isSent", default: false })
-  public isSent: boolean;
+  @Column("tinyint", { name: "completedCronSent", default: false })
+  public completedCronSent: boolean;
+
+  @Index()
+  @Column("tinyint", { name: "twoHoursBeforeCronSent", default: false })
+  public twoHoursBeforeCronSent: boolean;
 
   @Column("varchar", { nullable: true, name: "result" })
   public result: string;
