@@ -50,7 +50,7 @@ export class EventService {
     });
 
     const myTeamsIds = myTeams.length
-      ? myTeams.reduce((acc, curr) => (curr.team ? [...acc, curr] : acc), [])
+      ? myTeams.filter((player) => player.team).map((player) => player.team.id)
       : [-1];
 
     const queryBuilder = eventsRepository
@@ -95,7 +95,6 @@ export class EventService {
     }
 
     const myEvents = await queryBuilder.getMany();
-
     const myEventIds = myEvents.map((event) => event.id).concat(-1);
 
     const qb = eventsRepository
