@@ -2,11 +2,17 @@ import Axios from "axios";
 import { Request, Response } from "express";
 import { Brackets, getCustomRepository, getRepository } from "typeorm";
 import { Event } from "../../event/entities/event.entity";
-import { Request as Invitation, RequestStatus } from "../../request/entities/request.entity";
+import {
+  Request as Invitation,
+  RequestStatus,
+} from "../../request/entities/request.entity";
 import { Team } from "../../team/entities/team.entity";
 import { TeamUsers } from "../../team/entities/team.users.entity";
 import { User } from "../../user/entities/user.entity";
-import { Notification, NotificationType } from "../entities/notification.entity";
+import {
+  Notification,
+  NotificationType,
+} from "../entities/notification.entity";
 import { NotificationRepository } from "../repositories/notification.repository";
 
 export class NotificationService {
@@ -21,7 +27,11 @@ export class NotificationService {
 
     if (request.query.chats === "true") {
       queryBuilder.andWhere("notification.type IN (:...types)", {
-        types: [NotificationType.CHAT_EVENT, NotificationType.CHAT_TEAM, NotificationType.CHAT_USER],
+        types: [
+          NotificationType.CHAT_EVENT,
+          NotificationType.CHAT_TEAM,
+          NotificationType.CHAT_USER,
+        ],
       });
       queryBuilder.orWhere(
         new Brackets((qb) =>
@@ -33,7 +43,11 @@ export class NotificationService {
       );
     } else {
       queryBuilder.andWhere("notification.type NOT IN (:...types)", {
-        types: [NotificationType.CHAT_EVENT, NotificationType.CHAT_TEAM, NotificationType.CHAT_USER],
+        types: [
+          NotificationType.CHAT_EVENT,
+          NotificationType.CHAT_TEAM,
+          NotificationType.CHAT_USER,
+        ],
       });
     }
     queryBuilder.addOrderBy("notification.id", "DESC");
@@ -43,7 +57,10 @@ export class NotificationService {
     return myNotifications.map((n) => n.toResponse);
   };
 
-  static listMyComplexNotifications = async (request: Request, response: Response) => {
+  static listMyComplexNotifications = async (
+    request: Request,
+    response: Response
+  ) => {
     const notificationRepository = getCustomRepository(NotificationRepository);
     const eventId = request.params.complexId;
 
@@ -84,11 +101,17 @@ export class NotificationService {
     }
   };
 
-  static updateChatNotification = async (notification: Notification, body: any) => {
+  static updateChatNotification = async (
+    notification: Notification,
+    body: any
+  ) => {
     const notificationRepository = getRepository(Notification);
 
     try {
-      await notificationRepository.update({ id: notification.id }, { readIds: JSON.stringify(body.readIds) });
+      await notificationRepository.update(
+        { id: notification.id },
+        { readIds: JSON.stringify(body.readIds) }
+      );
 
       return "Njoftimi chat u perditesua";
     } catch (err) {
@@ -96,7 +119,10 @@ export class NotificationService {
     }
   };
 
-  static pushChatNotification = async (request: Request, response: Response) => {
+  static pushChatNotification = async (
+    request: Request,
+    response: Response
+  ) => {
     try {
       const userRepository = getRepository(User);
       const body = request.body;
@@ -132,7 +158,10 @@ export class NotificationService {
           },
         };
 
-        const roomId = receiverId > senderId ? `${senderId}${receiverId}` : `${receiverId}${senderId}`;
+        const roomId =
+          receiverId > senderId
+            ? `${senderId}${receiverId}`
+            : `${receiverId}${senderId}`;
         const insideUserChatJson = JSON.stringify({ userId: Number(roomId) });
         if (JSON.stringify(receiverUser.roomId) !== insideUserChatJson) {
           const pushNotifications = [];
@@ -169,7 +198,9 @@ export class NotificationService {
           .createQueryBuilder("teamUser")
           .leftJoinAndSelect("teamUser.player", "user")
           .where("teamUser.teamId = :teamId", { teamId: body.payload.teamId })
-          .andWhere("teamUser.status = :status", { status: RequestStatus.CONFIRMED })
+          .andWhere("teamUser.status = :status", {
+            status: RequestStatus.CONFIRMED,
+          })
           // .andWhere("teamUser.playerId != :playerId", { playerId: senderId })
           .getMany();
 
@@ -178,7 +209,9 @@ export class NotificationService {
           .select("user.name")
           .where("user.id = :senderId", { senderId })
           .getOne();
-        const sentPlayers = teamPlayers.map((teamPlayer) => teamPlayer.playerId);
+        const sentPlayers = teamPlayers.map(
+          (teamPlayer) => teamPlayer.playerId
+        );
         const sentIds = [];
         const notifications = [];
         const notificationBody = {
@@ -205,7 +238,11 @@ export class NotificationService {
                 to: teamPlayer.player.pushToken ?? "123",
                 title: `Mesazh i ri nga ${senderName.name}`,
                 body: body.payload.message,
-                data: { teamId: body.payload.teamId, teamName: team.name, teamPhoto },
+                data: {
+                  teamId: body.payload.teamId,
+                  teamName: team.name,
+                  teamPhoto,
+                },
               };
               pushNotifications.push(pushNotificationBody);
             }
@@ -229,8 +266,12 @@ export class NotificationService {
         const eventPlayers = await requestsRepository
           .createQueryBuilder("request")
           .leftJoinAndSelect("request.receiver", "user")
-          .where("request.eventId = :eventId", { eventId: body.payload.eventId })
-          .andWhere("request.status = :status", { status: RequestStatus.CONFIRMED })
+          .where("request.eventId = :eventId", {
+            eventId: body.payload.eventId,
+          })
+          .andWhere("request.status = :status", {
+            status: RequestStatus.CONFIRMED,
+          })
           .getMany();
         const senderName = await userRepository
           .createQueryBuilder("user")
@@ -245,19 +286,25 @@ export class NotificationService {
             .createQueryBuilder("tu")
             .leftJoinAndSelect("tu.player", "player")
             .where("tu.teamId = :teamId", { teamId: event.organiserTeamId })
-            .andWhere("tu.status = :status", { status: RequestStatus.CONFIRMED })
+            .andWhere("tu.status = :status", {
+              status: RequestStatus.CONFIRMED,
+            })
             .getMany();
           const receiverTeamPlayers = await teamUsersRepository
             .createQueryBuilder("tu")
             .leftJoinAndSelect("tu.player", "player")
             .where("tu.teamId = :teamId", { teamId: event.receiverTeamId })
-            .andWhere("tu.status = :status", { status: RequestStatus.CONFIRMED })
+            .andWhere("tu.status = :status", {
+              status: RequestStatus.CONFIRMED,
+            })
             .getMany();
 
           const pushNotifications = [];
           for (const teamPlayer of organiserTeamPlayers) {
             const insideEventChatJson = JSON.stringify({ eventId: event.id });
-            if (JSON.stringify(teamPlayer.player.roomId) !== insideEventChatJson) {
+            if (
+              JSON.stringify(teamPlayer.player.roomId) !== insideEventChatJson
+            ) {
               sentIds.push(teamPlayer.playerId);
               if (teamPlayer.playerId !== senderId) {
                 const pushNotificationBody = {
@@ -273,12 +320,16 @@ export class NotificationService {
                 };
                 pushNotifications.push(pushNotificationBody);
               }
-              NotificationService.pushNotification(pushNotifications);
             }
           }
+          NotificationService.pushNotification(pushNotifications);
+          pushNotifications.length = 0;
+
           for (const teamPlayer of receiverTeamPlayers) {
             const insideEventChatJson = JSON.stringify({ eventId: event.id });
-            if (JSON.stringify(teamPlayer.player.roomId) !== insideEventChatJson) {
+            if (
+              JSON.stringify(teamPlayer.player.roomId) !== insideEventChatJson
+            ) {
               sentIds.push(teamPlayer.playerId);
               if (teamPlayer.playerId !== senderId) {
                 const pushNotificationBody = {
@@ -294,12 +345,17 @@ export class NotificationService {
                 };
                 pushNotifications.push(pushNotificationBody);
               }
-              NotificationService.pushNotification(pushNotifications);
             }
           }
+          NotificationService.pushNotification(pushNotifications);
+          pushNotifications.length = 0;
 
-          const organiserTeamPlayersIds = organiserTeamPlayers.map((teamUser) => teamUser.playerId);
-          const receiverTeamPlayersIds = receiverTeamPlayers.map((teamUser) => teamUser.playerId);
+          const organiserTeamPlayersIds = organiserTeamPlayers.map(
+            (teamUser) => teamUser.playerId
+          );
+          const receiverTeamPlayersIds = receiverTeamPlayers.map(
+            (teamUser) => teamUser.playerId
+          );
           for (const id of organiserTeamPlayersIds) {
             sentPlayers.push(id);
           }
@@ -307,11 +363,16 @@ export class NotificationService {
             sentPlayers.push(id);
           }
         } else {
-          sentPlayers = eventPlayers.map((eventPlayer) => eventPlayer.receiverId);
+          sentPlayers = eventPlayers.map(
+            (eventPlayer) => eventPlayer.receiverId
+          );
           const pushNotifications = [];
           for (const eventPlayer of eventPlayers) {
             const insideEventChatJson = JSON.stringify({ eventId: event.id });
-            if (JSON.stringify(eventPlayer.receiver.roomId) !== insideEventChatJson) {
+            if (
+              JSON.stringify(eventPlayer.receiver.roomId) !==
+              insideEventChatJson
+            ) {
               sentIds.push(eventPlayer.receiverId);
               if (eventPlayer.receiverId !== senderId) {
                 const pushNotificationBody = {
@@ -327,10 +388,12 @@ export class NotificationService {
                 };
                 pushNotifications.push(pushNotificationBody);
               }
-              NotificationService.pushNotification(pushNotifications);
             }
           }
+          NotificationService.pushNotification(pushNotifications);
+          pushNotifications.length = 0;
         }
+
         let uniqueSentPlayers = [...new Set(sentPlayers)];
         const notifications = [];
         const notificationBody = {
@@ -366,12 +429,17 @@ export class NotificationService {
         .createQueryBuilder("n")
         .where(
           new Brackets((qb) =>
-            qb.where("n.senderId = :senderId", { senderId }).andWhere("n.receiverId = :receiverId", { receiverId })
+            qb
+              .where("n.senderId = :senderId", { senderId })
+              .andWhere("n.receiverId = :receiverId", { receiverId })
           )
         )
         .orWhere(
           new Brackets((qb) => {
-            qb.where("n.senderId = :receiverId", { receiverId }).andWhere("n.receiverId = :senderId", { senderId });
+            qb.where("n.senderId = :receiverId", { receiverId }).andWhere(
+              "n.receiverId = :senderId",
+              { senderId }
+            );
           })
         )
         .getOne();
@@ -409,7 +477,11 @@ export class NotificationService {
         return "Notification succesfully updated";
       }
     }
-    await notificationRepository.createQueryBuilder("notification").insert().values(payload).execute();
+    await notificationRepository
+      .createQueryBuilder("notification")
+      .insert()
+      .values(payload)
+      .execute();
     return "Notification successfully created!";
   };
 

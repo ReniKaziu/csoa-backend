@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToMany, ManyToOne, OneToMany, Unique } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, Unique } from "typeorm";
 import { Attachment } from "../../attachment/entities/attachment.entity";
 import { Common } from "../../common/entities/common";
 import { Complex } from "../../complex/entities/complex.entity";
@@ -43,7 +43,7 @@ export class User extends Common {
   })
   public tsModifyPasswordTokenExpiration?: Date | null;
 
-  @Column("varchar", { nullable: false, name: "phone_number" })
+  @Column("varchar", { nullable: true, name: "phone_number" })
   public phoneNumber: string;
 
   @Column("varchar", { nullable: false, name: "address" })
