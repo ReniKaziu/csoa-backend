@@ -271,6 +271,7 @@ export class UserService {
           ],
         })
         .getOne();
+
       if (futureCreatorEvent) {
         throw new Error(
           `Perdoruesi nuk mund te caktivizohet sepse ka evente ne te ardhmen!`
@@ -306,7 +307,8 @@ export class UserService {
           })
           .andWhere("e.startDate > :now", { now: new Date() })
           .getMany();
-        if (futureTeamEvents) {
+
+        if (futureTeamEvents.length) {
           throw new Error(
             `Perdoruesi nuk mund te caktivizohet sepse ka evente ne te ardhmen!`
           );
@@ -314,11 +316,16 @@ export class UserService {
         const teamPlayers = await queryRunner.manager.find(TeamUsers, {
           where: { teamId: In(teamIds) },
         });
+
         if (teamPlayers && teamPlayers.length) {
           const teamPlayersIds = teamPlayers.map((tu) => tu.id);
           // Delete players of creators' teams and creators' teams
           await queryRunner.manager.delete("teams_users", teamPlayersIds);
-          await queryRunner.manager.delete("teams", teamIds);
+          await queryRunner.manager.update(
+            Team,
+            { id: In(teamIds) },
+            { tsDeleted: new Date() }
+          );
         }
       }
 
@@ -344,15 +351,14 @@ export class UserService {
         .execute();
 
       // Soft delete user
-      await queryRunner.manager.softDelete("users", currentUser.id);
       await queryRunner.manager.update(
         User,
         { id: currentUser.id },
-        { phoneNumber: null }
+        { phoneNumber: null, tsDeleted: new Date() }
       );
 
       await queryRunner.commitTransaction();
-      return "Perdoruesi u caktivizua";
+      return false;
     } catch (err) {
       console.log(err);
       await queryRunner.rollbackTransaction();

@@ -162,7 +162,10 @@ export class NotificationService {
           receiverId > senderId
             ? `${senderId}${receiverId}`
             : `${receiverId}${senderId}`;
-        const insideUserChatJson = JSON.stringify({ userId: Number(roomId) });
+        const insideUserChatJson = JSON.stringify({
+          userId: roomId,
+        });
+
         if (JSON.stringify(receiverUser.roomId) !== insideUserChatJson) {
           const pushNotifications = [];
           const pushNotificationBody = {

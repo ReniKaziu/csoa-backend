@@ -44,11 +44,17 @@ export class UserController {
       const userData = users.map((user) => ({
         ...user,
         footballStars: parseFloat(starsMap[user.id]?.football ?? 0).toFixed(2),
-        basketballStars: parseFloat(starsMap[user.id]?.basketball ?? 0).toFixed(2),
+        basketballStars: parseFloat(starsMap[user.id]?.basketball ?? 0).toFixed(
+          2
+        ),
         tenisStars: parseFloat(starsMap[user.id]?.tenis ?? 0).toFixed(2),
-        voleyballStars: parseFloat(starsMap[user.id]?.voleyball ?? 0).toFixed(2),
+        voleyballStars: parseFloat(starsMap[user.id]?.voleyball ?? 0).toFixed(
+          2
+        ),
       }));
-      response.status(HttpStatusCode.OK).send(new SuccessResponse({ userData }));
+      response
+        .status(HttpStatusCode.OK)
+        .send(new SuccessResponse({ userData }));
     } catch (error) {
       console.log({ error });
     }
@@ -65,15 +71,22 @@ export class UserController {
 
   static getById = async (request: Request, response: Response) => {
     try {
-      const user = await UserService.getById(+request.params.userId, request.query.sport as string);
+      const user = await UserService.getById(
+        +request.params.userId,
+        request.query.sport as string
+      );
       if (Helper.isDefined(user)) {
         response.status(HttpStatusCode.OK).send(new SuccessResponse(user));
       } else {
-        response.status(HttpStatusCode.NOT_FOUND).send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
+        response
+          .status(HttpStatusCode.NOT_FOUND)
+          .send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
       }
     } catch (error) {
       console.log(error);
-      response.status(HttpStatusCode.NOT_FOUND).send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
+      response
+        .status(HttpStatusCode.NOT_FOUND)
+        .send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
     }
   };
 
@@ -81,9 +94,13 @@ export class UserController {
     const user = await UserService.findOne(+request.params.userId);
     if (Helper.isDefined(user)) {
       const finalUser = await UserService.update(request.body, user);
-      response.status(HttpStatusCode.OK).send(new SuccessResponse(finalUser.toResponseObject()));
+      response
+        .status(HttpStatusCode.OK)
+        .send(new SuccessResponse(finalUser.toResponseObject()));
     } else {
-      return response.status(HttpStatusCode.NOT_FOUND).send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
+      return response
+        .status(HttpStatusCode.NOT_FOUND)
+        .send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
     }
 
     response.status(HttpStatusCode.OK).send();
@@ -93,9 +110,18 @@ export class UserController {
     const user = await UserService.findOne(+request.params.userId);
     if (Helper.isDefined(user)) {
       const deactivated = await UserService.deactivate(user);
-      response.status(HttpStatusCode.OK).send(new SuccessResponse(deactivated));
+      if (!deactivated)
+        return response
+          .status(HttpStatusCode.OK)
+          .send(new SuccessResponse("Success"));
+      else
+        return response
+          .status(HttpStatusCode.NOT_FOUND)
+          .send(new ErrorResponse(deactivated));
     } else {
-      return response.status(HttpStatusCode.NOT_FOUND).send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
+      return response
+        .status(HttpStatusCode.NOT_FOUND)
+        .send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
     }
 
     response.status(HttpStatusCode.OK).send();
@@ -107,7 +133,9 @@ export class UserController {
       const updatedUser = await UserService.updateSport(request.body, user);
       response.status(HttpStatusCode.OK).send(new SuccessResponse(updatedUser));
     } else {
-      return response.status(HttpStatusCode.NOT_FOUND).send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
+      return response
+        .status(HttpStatusCode.NOT_FOUND)
+        .send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
     }
 
     response.status(HttpStatusCode.OK).send();
@@ -118,9 +146,13 @@ export class UserController {
       const user = await UserService.findOne(+request.params.userId);
       if (Helper.isDefined(user)) {
         await UserService.deleteById(user);
-        return response.status(HttpStatusCode.OK).send(new SuccessResponse("Successfully deleted"));
+        return response
+          .status(HttpStatusCode.OK)
+          .send(new SuccessResponse("Successfully deleted"));
       } else {
-        return response.status(HttpStatusCode.NOT_FOUND).send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
+        return response
+          .status(HttpStatusCode.NOT_FOUND)
+          .send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
       }
     } catch (err) {
       console.log(err);
@@ -128,7 +160,10 @@ export class UserController {
     }
   };
 
-  static listBusinessAccounts = async (request: Request, response: Response) => {
+  static listBusinessAccounts = async (
+    request: Request,
+    response: Response
+  ) => {
     const userRepository = getRepository(User);
     const complexRepository = getRepository(Complex);
     try {
@@ -138,7 +173,9 @@ export class UserController {
         },
         withDeleted: true,
       });
-      return response.status(HttpStatusCode.OK).send(new SuccessResponse(users));
+      return response
+        .status(HttpStatusCode.OK)
+        .send(new SuccessResponse(users));
     } catch (err) {
       console.log(err);
       return response.status(400).send(new ErrorResponse(err));
@@ -169,27 +206,51 @@ export class UserController {
     const user = await UserService.findOne(+request.params.userId);
 
     if (Helper.isDefined(user)) {
-      const finalUser = await UserService.updatePassword(request.body.newPassword, user);
-      response.status(HttpStatusCode.OK).send(new SuccessResponse(finalUser.toResponseObject()));
+      const finalUser = await UserService.updatePassword(
+        request.body.newPassword,
+        user
+      );
+      response
+        .status(HttpStatusCode.OK)
+        .send(new SuccessResponse(finalUser.toResponseObject()));
     } else {
-      return response.status(HttpStatusCode.NOT_FOUND).send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
+      return response
+        .status(HttpStatusCode.NOT_FOUND)
+        .send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
     }
 
     response.status(HttpStatusCode.OK).send();
   };
 
-  public static patchMyPassword = async (request: Request, response: Response) => {
-    const [result, error] = await UserService.patchMyPassword(request, response);
+  public static patchMyPassword = async (
+    request: Request,
+    response: Response
+  ) => {
+    const [result, error] = await UserService.patchMyPassword(
+      request,
+      response
+    );
     if (error) {
-      return response.status(402).send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
+      return response
+        .status(402)
+        .send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
     }
     return response.status(200).send(new SuccessResponse("success"));
   };
 
-  public static checkAvailability = async (request: Request, response: Response) => {
+  public static checkAvailability = async (
+    request: Request,
+    response: Response
+  ) => {
     try {
-      const isAvailable = await UserService.checkAvailability(request.body, request, response);
-      response.status(HttpStatusCode.OK).send(new SuccessResponse({ isAvailable }));
+      const isAvailable = await UserService.checkAvailability(
+        request.body,
+        request,
+        response
+      );
+      response
+        .status(HttpStatusCode.OK)
+        .send(new SuccessResponse({ isAvailable }));
     } catch (err) {
       console.log(err);
       return response.status(400).send(new ErrorResponse(err));
@@ -200,11 +261,17 @@ export class UserController {
     UserService.checkPhoneNumber(
       request.body.phoneNumber,
       (code) => {
-        return response.status(200).send(new SuccessResponse({ message: "Verification code sent", code }));
+        return response
+          .status(200)
+          .send(
+            new SuccessResponse({ message: "Verification code sent", code })
+          );
       },
       (err) => {
         console.log({ err });
-        return response.status(404).send(new ErrorResponse("Phone number does not exist"));
+        return response
+          .status(404)
+          .send(new ErrorResponse("Phone number does not exist"));
       }
     );
   }
@@ -289,44 +356,65 @@ export class UserController {
     return response.status(200).send(new SuccessResponse({ cities }));
   }
 
-  public static async insertProfilePicture(request: Request, response: Response) {
+  public static async insertProfilePicture(
+    request: Request,
+    response: Response
+  ) {
     try {
       const user = await UserService.insertProfilePicture(request, response);
       return response.status(200).send(new SuccessResponse({ user }));
     } catch (err) {
       console.log({ err });
-      return response.status(404).send(new ErrorResponse("Could not update profile picture"));
+      return response
+        .status(404)
+        .send(new ErrorResponse("Could not update profile picture"));
     }
   }
 
-  public static async updateProfilePicture(request: Request, response: Response) {
+  public static async updateProfilePicture(
+    request: Request,
+    response: Response
+  ) {
     try {
       const user = await UserService.updateProfilePicture(request, response);
       return response.status(200).send(new SuccessResponse({ user }));
     } catch (err) {
       console.log({ err });
-      return response.status(404).send(new ErrorResponse("Could not update profile picture"));
+      return response
+        .status(404)
+        .send(new ErrorResponse("Could not update profile picture"));
     }
   }
 
   static upload = async (request: Request, response: Response) => {
     try {
       const attachments = await UserService.upload(request, response);
-      response.status(HttpStatusCode.OK).send(new SuccessResponse({ attachments }));
+      response
+        .status(HttpStatusCode.OK)
+        .send(new SuccessResponse({ attachments }));
     } catch (err) {
       console.log(err);
       return response.status(400).send(new ErrorResponse(err));
     }
   };
 
-  static deleteAttachmentById = async (request: Request, response: Response) => {
+  static deleteAttachmentById = async (
+    request: Request,
+    response: Response
+  ) => {
     try {
-      const attachment = await AttachmentService.getById(+request.params.attachmentId);
+      const attachment = await AttachmentService.getById(
+        +request.params.attachmentId
+      );
       if (Helper.isDefined(attachment)) {
         await AttachmentService.deleteById(attachment);
-        return response.status(HttpStatusCode.OK).send(new SuccessResponse("Successfully deleted"));
+        return response
+          .status(HttpStatusCode.OK)
+          .send(new SuccessResponse("Successfully deleted"));
       } else {
-        return response.status(HttpStatusCode.NOT_FOUND).send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
+        return response
+          .status(HttpStatusCode.NOT_FOUND)
+          .send(new ErrorResponse(ERROR_MESSAGES.RECORD_NOT_FOUND));
       }
     } catch (err) {
       console.log(err);
@@ -349,7 +437,9 @@ export class UserController {
       return response.status(200).send(new SuccessResponse({ user }));
     } catch (err) {
       console.log({ err });
-      return response.status(404).send(new ErrorResponse("Could not update profile picture"));
+      return response
+        .status(404)
+        .send(new ErrorResponse("Could not update profile picture"));
     }
   }
 
@@ -378,7 +468,10 @@ export class UserController {
 
   static changePassword = async (request: Request, response: Response) => {
     try {
-      await getRepository(User).update({ id: +request.params.id }, { password: Md5.init(request.body.password) });
+      await getRepository(User).update(
+        { id: +request.params.id },
+        { password: Md5.init(request.body.password) }
+      );
       response.sendStatus(204);
     } catch (err) {
       console.log(err);
