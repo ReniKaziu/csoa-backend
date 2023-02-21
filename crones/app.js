@@ -56,8 +56,9 @@ const checkForCompletedEvents = () => {
       const ids = [];
       for (const result of results) {
         ids.push(result.eventId);
-        const organiserCaptainNotificationBody = [
+        const organiserCaptainSetResultNotificationBody = [
           JSON.stringify({
+            setResult: true,
             eventId: result.eventId,
             eventName: result.eventName,
             exponentPushToken: result.organiserPushToken ?? "123",
@@ -67,8 +68,21 @@ const checkForCompletedEvents = () => {
           "cron update result notification",
           result.organiserTeamCaptainId,
         ];
-        const receiverCaptainNotificationBody = [
+        const organiserCaptainSetReviewNotificationBody = [
           JSON.stringify({
+            setReview: true,
+            eventId: result.eventId,
+            eventName: result.eventName,
+            exponentPushToken: result.organiserPushToken ?? "123",
+            title: `Eventi: ${result.eventName} ka perfunduar. Mund te beni vleresimet per lojtaret e ndeshjes`,
+            body: "Futuni ne aplikacion dhe vendosni rezultatin",
+          }),
+          "cron update result notification",
+          result.organiserTeamCaptainId,
+        ];
+        const receiverCaptainSetResultNotificationBody = [
+          JSON.stringify({
+            setResult: true,
             eventId: result.eventId,
             eventName: result.eventName,
             exponentPushToken: result.receiverPushToken ?? "123",
@@ -78,22 +92,54 @@ const checkForCompletedEvents = () => {
           "cron update result notification",
           result.receiverTeamCaptainId,
         ];
-        const organiserPushNotificationBody = {
+        const receiverCaptainSetReviewNotificationBody = [
+          JSON.stringify({
+            setReview: true,
+            eventId: result.eventId,
+            eventName: result.eventName,
+            exponentPushToken: result.receiverPushToken ?? "123",
+            title: `Eventi: ${result.eventName} ka perfunduar. Mund te beni vleresimet per lojtaret e ndeshjes`,
+            body: "Futuni ne aplikacion dhe vendosni rezultatin",
+          }),
+          "cron update result notification",
+          result.receiverTeamCaptainId,
+        ];
+        const organiserCaptainSetResultPushNotificationBody = {
           to: result.organiserPushToken ?? "123",
           title: `Eventi: ${result.eventName} ka perfunduar. Mund te vendosni rezultatin e ndeshjes`,
           body: "Futuni ne aplikacion dhe vendosni rezultatin",
-          data: { eventId: result.eventId },
+          data: { eventId: result.eventId, setResult: true },
         };
-        const receiverPushNotificationBody = {
+        const organiserCaptainSetReviewPushNotificationBody = {
+          to: result.organiserPushToken ?? "123",
+          title: `Eventi: ${result.eventName} ka perfunduar. Mund te beni vleresimet per lojtaret e ndeshjes`,
+          body: "Futuni ne aplikacion dhe vendosni rezultatin",
+          data: { eventId: result.eventId, setReview: true },
+        };
+        const receiverCaptainSetResultPushNotificationBody = {
           to: result.receiverPushToken ?? "123",
           title: `Eventi: ${result.eventName} ka perfunduar. Mund te vendosni rezultatin e ndeshjes`,
           body: "Futuni ne aplikacion dhe vendosni rezultatin",
-          data: { eventId: result.eventId },
+          data: { eventId: result.eventId, setResult: true },
         };
-        notifications.push(organiserCaptainNotificationBody);
-        notifications.push(receiverCaptainNotificationBody);
-        pushNotifications.push(organiserPushNotificationBody);
-        pushNotifications.push(receiverPushNotificationBody);
+        const receiverCaptainSetReviewPushNotificationBody = {
+          to: result.receiverPushToken ?? "123",
+          title: `Eventi: ${result.eventName} ka perfunduar. Mund te beni vleresimet per lojtaret e ndeshjes`,
+          body: "Futuni ne aplikacion dhe vendosni rezultatin",
+          data: { eventId: result.eventId, setReview: true },
+        };
+        notifications.push(
+          organiserCaptainSetResultNotificationBody,
+          organiserCaptainSetReviewNotificationBody,
+          receiverCaptainSetResultNotificationBody,
+          receiverCaptainSetReviewNotificationBody
+        );
+        pushNotifications.push(
+          organiserCaptainSetResultPushNotificationBody,
+          organiserCaptainSetReviewPushNotificationBody,
+          receiverCaptainSetResultPushNotificationBody,
+          receiverCaptainSetReviewPushNotificationBody
+        );
       }
 
       // 2- Update events query
