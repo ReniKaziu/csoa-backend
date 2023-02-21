@@ -804,6 +804,9 @@ export class EventService {
         receiverTeamCaptainId,
         isConfirmedByUser,
         level,
+        isDraw,
+        winnerTeamId,
+        loserTeamId,
       },
     } = request;
     if (new Date(startDate) < new Date()) {
@@ -976,7 +979,6 @@ export class EventService {
 
           const eventCreator = await userRepository
             .createQueryBuilder("u")
-            .select("u.name")
             .where("u.id = :creatorId", { creatorId: currentEvent.creatorId })
             .getOne();
 
