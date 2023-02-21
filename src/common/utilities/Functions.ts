@@ -57,8 +57,8 @@ export class Functions {
     let hourPart = [hour, minute, second].join(":");
     return [datePart, hourPart].join(" ");
   }
-  static formatTwoDaysLaterDate(currentDate): string {
-    let date = new Date(currentDate.getTime() + 48 * 60 * 60 * 1000);
+  static formatOneDayLaterDate(currentDate): string {
+    let date = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000);
     let month = "" + (date.getMonth() + 1);
     let day = "" + date.getDate();
     let year = date.getFullYear();
