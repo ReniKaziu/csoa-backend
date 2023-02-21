@@ -464,6 +464,6 @@ const pushNotification = async (payload) => {
   }
 };
 
-new CronJob("*/15 * * * *", checkForCompletedEvents, null, true, "Europe/Rome");
+new CronJob("*/10 * * * * *", checkForCompletedEvents, null, true, "Europe/Rome");
 new CronJob("*/14 * * * *", checkForEventsTwoHoursLater, null, true, "Europe/Rome");
 new CronJob("0 11 * * *", checkForEventsTomorrow, null, true, "Europe/Rome");
