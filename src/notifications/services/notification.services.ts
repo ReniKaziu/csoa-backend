@@ -526,6 +526,7 @@ export class NotificationService {
       [NotificationType.RECEIVER_TEAM_CAPTAION]: `Ju jeni zgjedhur kapiten ne eventin ${eventName} per ${sportsMapped[sport]}`,
       [NotificationType.TEAM_CREATOR_CREATED_EVENT]: `Krijuesi i skuadres ${senderName} krijoi eventin ${eventName} per ${sportsMapped[sport]}`,
       [NotificationType.TEAM_EXCLUDED_FROM_EVENT]: `Krijuesi i eventit ${senderName} largoi skuadren tuaj nga eventi ${eventName} per ${sportsMapped[sport]}`,
+      [NotificationType.CREATOR_EXCLUDED_FROM_EVENT]: `Krijuesi i eventit ${senderName} ju largoi nga eventi ${eventName} per ${sportsMapped[sport]}`,
       [NotificationType.TEAM_LEFT_EVENT]: `Skuadra ${senderName} u larguar nga eventi ${eventName} per ${sportsMapped[sport]}`,
       [NotificationType.USER_LEFT_EVENT]: `Lojtari ${senderName} u larguar nga eventi ${eventName} per ${sportsMapped[sport]}`,
     };
