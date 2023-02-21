@@ -128,18 +128,14 @@ const checkForCompletedEvents = () => {
           body: "Futuni ne aplikacion dhe vendosni rezultatin",
           data: { eventId: result.eventId, setReview: true },
         };
-        notifications.push(
-          organiserCaptainSetResultNotificationBody,
-          organiserCaptainSetReviewNotificationBody,
-          receiverCaptainSetResultNotificationBody,
-          receiverCaptainSetReviewNotificationBody
-        );
-        pushNotifications.push(
-          organiserCaptainSetResultPushNotificationBody,
-          organiserCaptainSetReviewPushNotificationBody,
-          receiverCaptainSetResultPushNotificationBody,
-          receiverCaptainSetReviewPushNotificationBody
-        );
+        notifications.push(organiserCaptainSetResultNotificationBody);
+        notifications.push(organiserCaptainSetReviewNotificationBody);
+        notifications.push(receiverCaptainSetResultNotificationBody);
+        notifications.push(receiverCaptainSetReviewNotificationBody);
+        pushNotifications.push(organiserCaptainSetResultPushNotificationBody);
+        pushNotifications.push(organiserCaptainSetReviewPushNotificationBody);
+        pushNotifications.push(receiverCaptainSetResultPushNotificationBody);
+        pushNotifications.push(receiverCaptainSetReviewPushNotificationBody);
       }
 
       // 2- Update events query
