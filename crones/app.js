@@ -75,9 +75,9 @@ const checkForCompletedEvents = () => {
             eventName: result.eventName,
             exponentPushToken: result.organiserPushToken ?? "123",
             title: `Eventi: ${result.eventName} ka perfunduar. Mund te beni vleresimet per lojtaret e ndeshjes`,
-            body: "Futuni ne aplikacion dhe vendosni rezultatin",
+            body: "Futuni ne aplikacion dhe vleresoni lojtaret",
           }),
-          "cron update result notification",
+          "cron set review notification",
           result.organiserTeamCaptainId,
         ];
         const receiverCaptainSetResultNotificationBody = [
@@ -99,9 +99,9 @@ const checkForCompletedEvents = () => {
             eventName: result.eventName,
             exponentPushToken: result.receiverPushToken ?? "123",
             title: `Eventi: ${result.eventName} ka perfunduar. Mund te beni vleresimet per lojtaret e ndeshjes`,
-            body: "Futuni ne aplikacion dhe vendosni rezultatin",
+            body: "Futuni ne aplikacion dhe vleresoni lojtaret",
           }),
-          "cron update result notification",
+          "cron set review notification",
           result.receiverTeamCaptainId,
         ];
         const organiserCaptainSetResultPushNotificationBody = {
@@ -113,7 +113,7 @@ const checkForCompletedEvents = () => {
         const organiserCaptainSetReviewPushNotificationBody = {
           to: result.organiserPushToken ?? "123",
           title: `Eventi: ${result.eventName} ka perfunduar. Mund te beni vleresimet per lojtaret e ndeshjes`,
-          body: "Futuni ne aplikacion dhe vendosni rezultatin",
+          body: "Futuni ne aplikacion dhe vleresoni lojtaret",
           data: { eventId: result.eventId, setReview: true },
         };
         const receiverCaptainSetResultPushNotificationBody = {
@@ -125,7 +125,7 @@ const checkForCompletedEvents = () => {
         const receiverCaptainSetReviewPushNotificationBody = {
           to: result.receiverPushToken ?? "123",
           title: `Eventi: ${result.eventName} ka perfunduar. Mund te beni vleresimet per lojtaret e ndeshjes`,
-          body: "Futuni ne aplikacion dhe vendosni rezultatin",
+          body: "Futuni ne aplikacion dhe vleresoni lojtaret",
           data: { eventId: result.eventId, setReview: true },
         };
         notifications.push(organiserCaptainSetResultNotificationBody);
