@@ -402,7 +402,7 @@ export class RequestService {
           const creator = await UserService.findOne(originalRequest.event.creatorId);
 
           await NotificationService.createRequestNotification(
-            originalRequest.receiverId,
+            creator.id,
             NotificationType.USER_CONFIRMED_INVITATION,
             updatedRequest.event.id,
             updatedRequest.event.name,
