@@ -410,6 +410,7 @@ const checkForEventsTomorrow = () => {
 
           connection.query(selectEventPlayersQuery, (err, eventPlayers, fields) => {
             for (const player of eventPlayers) {
+              console.log({player});
               const notificationBody = [
                 JSON.stringify({
                   eventId: event.id,
@@ -460,6 +461,6 @@ const pushNotification = async (payload) => {
   }
 };
 
-new CronJob("*/1 * * * * *", checkForCompletedEvents, null, true, "Europe/Rome");
-new CronJob("*/5 * * * * *", checkForEventsTwoHoursLater, null, true, "Europe/Rome");
-new CronJob("0 11 * * *", checkForEventsTomorrow, null, true, "Europe/Rome");
+// new CronJob("*/1 * * * * *", checkForCompletedEvents, null, true, "Europe/Rome");
+// new CronJob("*/5 * * * * *", checkForEventsTwoHoursLater, null, true, "Europe/Rome");
+// new CronJob("0 11 * * *", checkForEventsTomorrow, null, true, "Europe/Rome");
