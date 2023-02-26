@@ -200,6 +200,8 @@ export class Event extends Common {
       weeklyGroupedId: this.weeklyGroupedId,
       minAge: this.minAge,
       maxAge: this.maxAge,
+      winnerTeamId: this.winnerTeamId,
+      loserTeamId: this.loserTeamId,
     };
   }
 
