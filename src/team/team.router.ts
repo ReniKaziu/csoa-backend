@@ -7,7 +7,7 @@ import { TeamController } from "./controllers/team.controller";
 
 export class TeamRouter {
   static configRoutes = (app: express.Application) => {
-    app.get("/my-teams", [
+    app.get("/my-teams/:userId", [
       AuthenticationMiddleware.checkJwtToken,
       PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
       TeamController.listMyTeams,

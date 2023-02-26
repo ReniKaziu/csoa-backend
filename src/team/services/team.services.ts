@@ -15,7 +15,7 @@ import { StatisticsService } from "./statistics.services";
 export class TeamService {
   static listMyTeams = async (request: Request, response: Response) => {
     const teamUsersRepository = getRepository(TeamUsers);
-    const user = await UserService.findOne(+response.locals.jwt.userId);
+    const user = await UserService.findOne(+request.params.userId);
     const sportsMapped = {
       football: "Futboll",
       basketball: "Basketboll",
