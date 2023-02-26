@@ -9,4 +9,3 @@ temp/
 .DS_Store
 src/.DS_Store
 /public
-crones/.env

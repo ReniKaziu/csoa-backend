@@ -20,6 +20,8 @@ import { ReviewRouter } from "./review/review.router";
 import { NotificationRouter } from "./notifications/notification.router";
 import { ComplexRouter } from "./complex/complex.router";
 import { TeamUsersRouter } from "./team/team.users.router";
+import { checkForCompletedEvents, checkForEventsTomorrow, checkForEventsTwoHoursLater } from "./crones/crones.service";
+const CronJob = require("cron").CronJob;
 
 createConnection()
   .then(async (connection) => {
@@ -66,6 +68,10 @@ createConnection()
     });
 
     const port = process.env.PORT || 4500;
+
+    new CronJob("*/15 * * * *", checkForCompletedEvents, null, true, "Europe/Rome");
+    new CronJob("*/14 * * * *", checkForEventsTwoHoursLater, null, true, "Europe/Rome");
+    new CronJob("0 11 * * *", checkForEventsTomorrow, null, true, "Europe/Rome");
 
     if (process.env.SSL_LOCATION) {
       const privateKey = fs.readFileSync(process.env.SSL_LOCATION + "/privkey.pem", "utf8");
