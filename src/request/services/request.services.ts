@@ -8,21 +8,14 @@ import { RequestRepository } from "../repositories/request.repository";
 import { TeamRepository } from "../../team/repositories/team.repository";
 import { StatisticsService } from "../../team/services/statistics.services";
 import { EventRepository } from "../../event/repositories/event.repository";
-import {
-  Request as Invitation,
-  RequestStatus,
-} from "../entities/request.entity";
+import { Request as Invitation, RequestStatus } from "../entities/request.entity";
 import { NotificationType } from "../../notifications/entities/notification.entity";
 import { TeamUsersRepository } from "../../team/repositories/team.users.repository";
 import { NotificationService } from "../../notifications/services/notification.services";
 import { UserService } from "../../user/services/user.service";
 
 export class RequestService {
-  static listPossibleUsersForEvent = async (
-    event: Event,
-    request: Request,
-    response: Response
-  ) => {
+  static listPossibleUsersForEvent = async (event: Event, request: Request, response: Response) => {
     const usersRepository = getCustomRepository(UserRepository);
     const teamsUsersRepository = getCustomRepository(TeamUsersRepository);
     const eventRepository = getCustomRepository(EventRepository);
@@ -31,20 +24,15 @@ export class RequestService {
       .createQueryBuilder("user")
       .leftJoinAndSelect("user.receivedReviews", "review")
       .where(`user.sports LIKE '%"${sport}": {"picked": true%'`)
+      .andWhere("user.ts_deleted IS NULL")
       .andWhere(
         `user.id NOT IN (SELECT receiverId FROM requests WHERE eventId = ${event.id} AND status IN ('${RequestStatus.CONFIRMED}', '${RequestStatus.WAITING_FOR_CONFIRMATION}')  )`
       )
       .andWhere("user.address = :eventCity", {
         eventCity: event.location.complex.city,
       })
-      .andWhere(
-        "(year(CURRENT_TIMESTAMP) - year(user.birthday)) >= :eventMinAge",
-        { eventMinAge: event.minAge }
-      )
-      .andWhere(
-        "(year(CURRENT_TIMESTAMP) - year(user.birthday)) <= :eventMaxAge",
-        { eventMaxAge: event.maxAge }
-      );
+      .andWhere("(year(CURRENT_TIMESTAMP) - year(user.birthday)) >= :eventMinAge", { eventMinAge: event.minAge })
+      .andWhere("(year(CURRENT_TIMESTAMP) - year(user.birthday)) <= :eventMaxAge", { eventMaxAge: event.maxAge });
 
     let userQb = `(user.sports `;
 
@@ -70,49 +58,42 @@ export class RequestService {
       );
     }
 
-    // if (request.body.playedBefore === true) {
-    //   const myTeams = await teamsUsersRepository
-    //     .createQueryBuilder("tu")
-    //     .select("tu.teamId")
-    //     .where("tu.playerId = :userId", { userId: response.locals.jwt.userId })
-    //     .getMany();
+    if (request.body.playedBefore === true) {
+      const myTeams = await teamsUsersRepository
+        .createQueryBuilder("tu")
+        .select("tu.teamId")
+        .where("tu.playerId = :userId", { userId: response.locals.jwt.userId })
+        .getMany();
 
-    //   const myTeamsMapped = myTeams.map((el) => el.teamId);
+      const myTeamsMapped = myTeams.map((el) => el.teamId);
 
-    //   const usersPlayedBefore = await eventRepository
-    //     .createQueryBuilder("e")
-    //     .select("DISTINCT u.id")
-    //     .innerJoin(
-    //       "teams_users",
-    //       "tu",
-    //       "e.organiserTeamId = tu.teamId OR e.receiverTeamId = tu.teamId"
-    //     )
-    //     .innerJoin(
-    //       "event_teams_users",
-    //       "etu",
-    //       "tu.id = etu.teamUserId and e.id = etu.eventId"
-    //     )
-    //     .innerJoin("users", "u", "u.id = tu.playerId")
-    //     .where("e.status = :status", { status: EventStatus.COMPLETED })
-    //     .andWhere(`tu.teamId NOT IN (${myTeamsMapped})`)
-    //     .andWhere(
-    //       `(e.receiverTeamId IN (${myTeamsMapped}) or e.organiserTeamId IN (${myTeamsMapped}))`
-    //     )
-    //     .getRawMany();
+      if (!myTeamsMapped.length) {
+        myTeamsMapped.push(-1);
+      }
 
-    //   const usersPlayedBeforeMapped = usersPlayedBefore.map((el) => el.id);
+      const usersPlayedBefore = await eventRepository
+        .createQueryBuilder("e")
+        .select("DISTINCT u.id")
+        .innerJoin("teams_users", "tu", "e.organiserTeamId = tu.teamId OR e.receiverTeamId = tu.teamId")
+        .innerJoin("event_teams_users", "etu", "tu.id = etu.teamUserId and e.id = etu.eventId")
+        .innerJoin("users", "u", "u.id = tu.playerId")
+        .where("e.status = :status", { status: EventStatus.COMPLETED })
+        .andWhere(`tu.teamId NOT IN (${myTeamsMapped})`)
+        .andWhere(`(e.receiverTeamId IN (${myTeamsMapped}) or e.organiserTeamId IN (${myTeamsMapped}))`)
+        .getRawMany();
 
-    //   possibleUsers.andWhere(`user.id IN (${usersPlayedBeforeMapped})`);
-    // }
+      const usersPlayedBeforeMapped = usersPlayedBefore.map((el) => el.id);
+      if (!usersPlayedBeforeMapped.length) {
+        usersPlayedBeforeMapped.push(-1);
+      }
+
+      possibleUsers.andWhere(`user.id IN (${usersPlayedBeforeMapped})`);
+    }
 
     return possibleUsers.getMany();
   };
 
-  static listInvitationsForEvent = async (
-    event: Event,
-    request: Request,
-    response: Response
-  ) => {
+  static listInvitationsForEvent = async (event: Event, request: Request, response: Response) => {
     const requestRepository = getCustomRepository(RequestRepository);
     const requests = requestRepository
       .createQueryBuilder("request")
@@ -124,12 +105,7 @@ export class RequestService {
     return requests;
   };
 
-  static inviteUser = async (
-    event: Event,
-    user: User,
-    request: Request,
-    response: Response
-  ) => {
+  static inviteUser = async (event: Event, user: User, request: Request, response: Response) => {
     const requestRepository = getCustomRepository(RequestRepository);
     const userRepository = getCustomRepository(UserRepository);
 
@@ -163,12 +139,7 @@ export class RequestService {
     return createdRequest;
   };
 
-  static requestToEnter = async (
-    event: Event,
-    creator: User,
-    request: Request,
-    response: Response
-  ) => {
+  static requestToEnter = async (event: Event, creator: User, request: Request, response: Response) => {
     const requestRepository = getCustomRepository(RequestRepository);
     const userRepository = getCustomRepository(UserRepository);
     const receiverId = +response.locals.jwt.userId;
@@ -203,12 +174,7 @@ export class RequestService {
     return createdRequest;
   };
 
-  static teamRequestToEnter = async (
-    event: Event,
-    team: Team,
-    request: Request,
-    response: Response
-  ) => {
+  static teamRequestToEnter = async (event: Event, team: Team, request: Request, response: Response) => {
     const requestRepository = getCustomRepository(RequestRepository);
     const payload = {
       senderTeamId: event.organiserTeamId,
@@ -283,10 +249,7 @@ export class RequestService {
             creator.name
           );
         }
-        await eventRepository.update(
-          { id: request.eventId },
-          { receiverTeamId: null }
-        );
+        await eventRepository.update({ id: request.eventId }, { receiverTeamId: null });
       } else {
         await NotificationService.createRequestNotification(
           request.receiverId,
@@ -328,10 +291,7 @@ export class RequestService {
             request.event.sport,
             request.receiverTeam.name
           );
-          await eventRepository.update(
-            { id: request.eventId },
-            { receiverTeamId: null }
-          );
+          await eventRepository.update({ id: request.eventId }, { receiverTeamId: null });
         }
       } else {
         const creator = await UserService.findOne(request.event.creatorId);
@@ -348,11 +308,7 @@ export class RequestService {
     }
   };
 
-  static updateRequest = async (
-    requestPayload,
-    originalRequest: Invitation,
-    request: Request
-  ) => {
+  static updateRequest = async (requestPayload, originalRequest: Invitation, request: Request) => {
     const requestRepository = getCustomRepository(RequestRepository);
     const teamUsersRepository = getCustomRepository(TeamUsersRepository);
     const userRepository = getCustomRepository(UserRepository);
@@ -370,16 +326,10 @@ export class RequestService {
     ) {
       requestToBeRefused = true;
     }
-    const mergedRequest = requestRepository.merge(
-      originalRequest,
-      requestPayload
-    );
+    const mergedRequest = requestRepository.merge(originalRequest, requestPayload);
     const updatedRequest = await requestRepository.save(mergedRequest);
 
-    if (
-      requestToBeConfirmed === true &&
-      updatedRequest.status === RequestStatus.CONFIRMED
-    ) {
+    if (requestToBeConfirmed === true && updatedRequest.status === RequestStatus.CONFIRMED) {
       if (originalRequest.isRequest) {
         if (originalRequest.receiverTeamId) {
           const teamPlayers = await teamUsersRepository
@@ -405,13 +355,9 @@ export class RequestService {
             { receiverTeamId: originalRequest.receiverTeamId }
           );
         } else {
-          const invitedUser = await UserService.findOne(
-            originalRequest.receiverId
-          );
+          const invitedUser = await UserService.findOne(originalRequest.receiverId);
 
-          const eventCreator = await UserService.findOne(
-            updatedRequest.event.creatorId
-          );
+          const eventCreator = await UserService.findOne(updatedRequest.event.creatorId);
 
           await NotificationService.createRequestNotification(
             originalRequest.receiverId,
@@ -467,9 +413,7 @@ export class RequestService {
             { receiverTeamId: originalRequest.receiverTeamId }
           );
         } else {
-          const creator = await UserService.findOne(
-            originalRequest.event.creatorId
-          );
+          const creator = await UserService.findOne(originalRequest.event.creatorId);
 
           await NotificationService.createRequestNotification(
             creator.id,
@@ -484,10 +428,7 @@ export class RequestService {
       }
     }
 
-    if (
-      requestToBeRefused === true &&
-      updatedRequest.status === RequestStatus.REFUSED
-    ) {
+    if (requestToBeRefused === true && updatedRequest.status === RequestStatus.REFUSED) {
       if (originalRequest.isRequest) {
         if (originalRequest.receiverTeamId) {
           const teamPlayers = await teamUsersRepository
@@ -508,9 +449,7 @@ export class RequestService {
             );
           }
         } else {
-          const invitedUser = await UserService.findOne(
-            originalRequest.receiverId
-          );
+          const invitedUser = await UserService.findOne(originalRequest.receiverId);
 
           await NotificationService.createRequestNotification(
             originalRequest.receiverId,
@@ -560,9 +499,7 @@ export class RequestService {
             originalRequest.receiverTeam.name
           );
         } else {
-          const creator = await UserService.findOne(
-            originalRequest.event.creatorId
-          );
+          const creator = await UserService.findOne(originalRequest.event.creatorId);
 
           await NotificationService.createRequestNotification(
             creator.id,
@@ -579,11 +516,7 @@ export class RequestService {
     return "Request successfully updated!";
   };
 
-  static listPossibleTeamsForEvent = async (
-    event: Event,
-    request: Request,
-    response: Response
-  ) => {
+  static listPossibleTeamsForEvent = async (event: Event, request: Request, response: Response) => {
     const teamsRepository = getCustomRepository(TeamRepository);
     const eventRepository = getCustomRepository(EventRepository);
     const requestRepository = getCustomRepository(RequestRepository);
@@ -600,16 +533,11 @@ export class RequestService {
       .innerJoinAndSelect("request.receiverTeam", "receiverTeam")
       .where("request.eventId = :eventId", { eventId: event.id })
       .andWhere("request.status IN (:statuses)", {
-        statuses: [
-          RequestStatus.CONFIRMED,
-          RequestStatus.WAITING_FOR_CONFIRMATION,
-        ],
+        statuses: [RequestStatus.CONFIRMED, RequestStatus.WAITING_FOR_CONFIRMATION],
       })
       .getMany();
 
-    const invitedTeamIds = requests
-      .map((invitedTeam) => invitedTeam.receiverTeam.id)
-      .concat(-1);
+    const invitedTeamIds = requests.map((invitedTeam) => invitedTeam.receiverTeam.id).concat(-1);
 
     const possibleTeams = teamsRepository
       .createQueryBuilder("team")
@@ -657,9 +585,7 @@ export class RequestService {
         .getRawMany();
 
       const playedBeforeTeamsMapped = playedBeforeTeams.map((el) =>
-        el.organiserTeamId === event.organiserTeamId
-          ? el.receiverTeamId
-          : el.organiserTeamId
+        el.organiserTeamId === event.organiserTeamId ? el.receiverTeamId : el.organiserTeamId
       );
       possibleTeams.andWhere("team.id IN (:playedBeforeTeamsMapped)", {
         playedBeforeTeamsMapped,
@@ -696,11 +622,9 @@ export class RequestService {
     const possibleTeamsDrawsMapped = {};
     if (possibleTeamDraws.length) {
       for (const draw of possibleTeamDraws) {
-        if (!possibleTeamsDrawsMapped[draw.organiser])
-          possibleTeamsDrawsMapped[draw.organiser] = 0;
+        if (!possibleTeamsDrawsMapped[draw.organiser]) possibleTeamsDrawsMapped[draw.organiser] = 0;
         possibleTeamsDrawsMapped[draw.organiser] += 1;
-        if (!possibleTeamsDrawsMapped[draw.receiver])
-          possibleTeamsDrawsMapped[draw.receiver] = 0;
+        if (!possibleTeamsDrawsMapped[draw.receiver]) possibleTeamsDrawsMapped[draw.receiver] = 0;
         possibleTeamsDrawsMapped[draw.receiver] += 1;
       }
     }
@@ -713,11 +637,7 @@ export class RequestService {
     }));
   };
 
-  static listTeamsInvitationsForEvent = async (
-    event: Event,
-    request: Request,
-    response: Response
-  ) => {
+  static listTeamsInvitationsForEvent = async (event: Event, request: Request, response: Response) => {
     const requestRepository = getCustomRepository(RequestRepository);
     const requests = await requestRepository
       .createQueryBuilder("request")
@@ -727,9 +647,7 @@ export class RequestService {
       .where("request.eventId = :eventId", { eventId: event.id })
       .getMany();
 
-    const invitedTeamIds = requests.map(
-      (invitedTeam) => invitedTeam.receiverTeam.id
-    );
+    const invitedTeamIds = requests.map((invitedTeam) => invitedTeam.receiverTeam.id);
 
     let invitedTeamsWins = [];
     let invitedTeamsLoses = [];
@@ -757,11 +675,9 @@ export class RequestService {
     const invitedTeamsDrawsMapped = {};
     if (invitedTeamsDraws.length) {
       for (const draw of invitedTeamsDraws) {
-        if (!invitedTeamsDrawsMapped[draw.organiser])
-          invitedTeamsDrawsMapped[draw.organiser] = 0;
+        if (!invitedTeamsDrawsMapped[draw.organiser]) invitedTeamsDrawsMapped[draw.organiser] = 0;
         invitedTeamsDrawsMapped[draw.organiser] += 1;
-        if (!invitedTeamsDrawsMapped[draw.receiver])
-          invitedTeamsDrawsMapped[draw.receiver] = 0;
+        if (!invitedTeamsDrawsMapped[draw.receiver]) invitedTeamsDrawsMapped[draw.receiver] = 0;
         invitedTeamsDrawsMapped[draw.receiver] += 1;
       }
     }
@@ -779,12 +695,7 @@ export class RequestService {
     });
   };
 
-  static inviteTeam = async (
-    event: Event,
-    team: Team,
-    request: Request,
-    response: Response
-  ) => {
+  static inviteTeam = async (event: Event, team: Team, request: Request, response: Response) => {
     const requestRepository = getCustomRepository(RequestRepository);
     const payload = {
       senderTeamId: event.organiserTeamId,

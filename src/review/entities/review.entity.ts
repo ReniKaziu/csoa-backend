@@ -1,5 +1,6 @@
 import { Column, Entity, Index, ManyToOne } from "typeorm";
 import { Common } from "../../common/entities/common";
+import { Event } from "../../event/entities/event.entity";
 import { User } from "../../user/entities/user.entity";
 
 @Entity("reviews")
@@ -15,6 +16,9 @@ export class Review extends Common {
   @ManyToOne(() => User, (user) => user.givenReviews)
   public sender: User;
 
+  @ManyToOne(() => Event, (event) => event.eventReviews)
+  public event: Event;
+
   @ManyToOne(() => User, (user) => user.receivedReviews)
   public receiver: User;
 
@@ -22,6 +26,11 @@ export class Review extends Common {
     nullable: true,
   })
   senderId: number;
+
+  @Column("int", {
+    nullable: true,
+  })
+  eventId: number;
 
   @Column("int", {
     nullable: true,

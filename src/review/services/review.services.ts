@@ -5,23 +5,14 @@ import { EventTeamUsersRepository } from "../../event/repositories/event.team.us
 import { ReviewRepository } from "../repositories/review.repository";
 
 export class ReviewService {
-  static listOppositeTeamPlayers = async (
-    event: Event,
-    request: Request,
-    response: Response
-  ) => {
-    const eventTeamUsersRepository = getCustomRepository(
-      EventTeamUsersRepository
-    );
+  static listOppositeTeamPlayers = async (event: Event, request: Request, response: Response) => {
+    const eventTeamUsersRepository = getCustomRepository(EventTeamUsersRepository);
+    const reviewsRepository = getCustomRepository(ReviewRepository);
     const userId = response.locals.jwt.userId;
 
     const oppositeTeamPlayers = await eventTeamUsersRepository
       .createQueryBuilder("eventTeamUser")
-      .leftJoinAndSelect(
-        "eventTeamUser.teamUser",
-        "teamUser",
-        "teamUser.id = eventTeamUser.teamUserId"
-      )
+      .leftJoinAndSelect("eventTeamUser.teamUser", "teamUser", "teamUser.id = eventTeamUser.teamUserId")
       .leftJoinAndSelect("teamUser.player", "user")
       .where(
         `teamUser.teamId NOT IN (select teamUser.teamId from event_teams_users eventTeamUser join teams_users teamUser on teamUser.id = eventTeamUser.teamUserId
@@ -29,14 +20,23 @@ export class ReviewService {
       )
       .getMany();
 
+    const storedReviews = await reviewsRepository
+      .createQueryBuilder("r")
+      .where("r.eventId = :id", { id: event.id })
+      .andWhere("r.senderId = :userId", { userId })
+      .getMany();
+
+    if (storedReviews.length) {
+      for (const review of storedReviews) {
+        const oppositePlayer = oppositeTeamPlayers.find((item) => item.teamUser.playerId === review.receiverId);
+        oppositePlayer.teamUser.player["review"] = review.value;
+      }
+    }
+
     return oppositeTeamPlayers;
   };
 
-  static storeReviews = async (
-    event: Event,
-    request: Request,
-    response: Response
-  ) => {
+  static storeReviews = async (event: Event, request: Request, response: Response) => {
     const reviewRepository = getCustomRepository(ReviewRepository);
     const senderId = response.locals.jwt.userId;
     for (const user in request.body) {
@@ -49,6 +49,7 @@ export class ReviewService {
             receiverId: +user,
             value: request.body[user],
             sport: event.sport,
+            eventId: event.id,
           })
           .execute();
       } catch (err) {

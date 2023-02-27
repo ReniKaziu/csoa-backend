@@ -179,17 +179,21 @@ export class EventController {
       );
 
       if (response.locals.jwt.userRole === UserRole.USER) {
-        const complexAdmin = await getRepository(User).findOne({
+        const complexAdmins = await getRepository(User).find({
           where: { complexId: event.location.complex.id },
         });
-        await NotificationService.createEventNotification(
-          complexAdmin.id,
-          NotificationType.EVENT_DELETED_BY_USER_BEFORE_CONFIRMATION,
-          event.id,
-          event.name,
-          complexAdmin.pushToken,
-          event.sport
-        );
+        for (const admin of complexAdmins) {
+          if (admin.pushToken) {
+            await NotificationService.createEventNotification(
+              admin.id,
+              NotificationType.EVENT_DELETED_BY_USER_BEFORE_CONFIRMATION,
+              event.id,
+              event.name,
+              admin.pushToken,
+              event.sport
+            );
+          }
+        }
       }
       if (response.locals.jwt.userRole === UserRole.COMPNAY) {
         const creator = await getRepository(User).findOne({
@@ -254,17 +258,22 @@ export class EventController {
       );
 
       if (response.locals.jwt.userRole === UserRole.USER) {
-        const complexAdmin = await getRepository(User).findOne({
+        const complexAdmins = await getRepository(User).find({
           where: { complexId: event.location.complex.id },
         });
-        await NotificationService.createEventNotification(
-          complexAdmin.id,
-          NotificationType.EVENT_CANCELED_BY_USER_AFTER_CONFIRMATION,
-          event.id,
-          event.name,
-          complexAdmin.pushToken,
-          event.sport
-        );
+
+        for (const admin of complexAdmins) {
+          if (admin.pushToken) {
+            await NotificationService.createEventNotification(
+              admin.id,
+              NotificationType.EVENT_CANCELED_BY_USER_AFTER_CONFIRMATION,
+              event.id,
+              event.name,
+              admin.pushToken,
+              event.sport
+            );
+          }
+        }
       }
       if (response.locals.jwt.userRole === UserRole.COMPNAY) {
         const creator = await getRepository(User).findOne({

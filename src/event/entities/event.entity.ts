@@ -7,6 +7,7 @@ import { Location } from "../../complex/entities/location.entity";
 import { Request } from "../../request/entities/request.entity";
 import { WeeklyEventGroup } from "./weekly.event.group.entity";
 import { Notification } from "../../notifications/entities/notification.entity";
+import { Review } from "../../review/entities/review.entity";
 
 export enum EventStatus {
   DRAFT = "draft",
@@ -167,6 +168,9 @@ export class Event extends Common {
 
   @OneToMany(() => Request, (request) => request.event)
   eventRequests: Request[];
+
+  @OneToMany(() => Review, (review) => review.event)
+  eventReviews: Review[];
 
   @OneToMany(() => Notification, (notification) => notification.event)
   notifications: Notification[];

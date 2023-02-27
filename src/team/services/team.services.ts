@@ -33,7 +33,7 @@ export class TeamService {
 
     const myTeams = await teamUsersRepository.find({
       where: {
-        playerId: response.locals.jwt.userId,
+        playerId: user.id,
         status: TeamUserStatus.CONFIRMED,
       },
       relations: ["team"],
