@@ -149,10 +149,9 @@ export class EventService {
       qb.andWhere("event.startDate < :todayEnd", {
         todayEnd: oneDayLater + " 03:59:59",
       });
-      qb.limit(2);
-      qb.offset(page * 2);
+      qb.limit(10);
+      qb.offset(page * 10);
     }
-    qb.orderBy("event.id", "DESC");
 
     const publicEvents = await qb.getMany();
 
