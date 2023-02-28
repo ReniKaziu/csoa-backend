@@ -142,16 +142,9 @@ export class EventService {
       )
       .andWhere("event.id NOT IN (:...myEventIds)", { myEventIds });
 
-    if (request.query && request.query.todayEvents === "true") {
-      const page = +request.query.page - 1;
-      console.log({ page });
-
-      qb.andWhere("event.startDate < :todayEnd", {
-        todayEnd: oneDayLater + " 03:59:59",
-      });
-      qb.limit(10);
-      qb.offset(page * 10);
-    }
+    const page = +request.query.page - 1;
+    qb.limit(10);
+    qb.offset(page * 10);
 
     const publicEvents = await qb.getMany();
 

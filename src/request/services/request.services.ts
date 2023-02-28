@@ -13,12 +13,14 @@ import { NotificationType } from "../../notifications/entities/notification.enti
 import { TeamUsersRepository } from "../../team/repositories/team.users.repository";
 import { NotificationService } from "../../notifications/services/notification.services";
 import { UserService } from "../../user/services/user.service";
+import { ReviewRepository } from "../../review/repositories/review.repository";
 
 export class RequestService {
   static listPossibleUsersForEvent = async (event: Event, request: Request, response: Response) => {
     const usersRepository = getCustomRepository(UserRepository);
     const teamsUsersRepository = getCustomRepository(TeamUsersRepository);
     const eventRepository = getCustomRepository(EventRepository);
+    const reviewsRepository = getCustomRepository(ReviewRepository);
     const sport = event.sport;
     const possibleUsers = usersRepository
       .createQueryBuilder("user")
@@ -90,7 +92,19 @@ export class RequestService {
       possibleUsers.andWhere(`user.id IN (${usersPlayedBeforeMapped})`);
     }
 
-    return possibleUsers.getMany();
+    const users = await possibleUsers.getMany();
+    const usersIds = users.map((user) => user.id);
+
+    const stars = await reviewsRepository.getStars(usersIds, sport);
+
+    const usersMapped = users.map((user) => {
+      return {
+        ...user,
+        averageReview: stars.find((review) => review.userId === user.id),
+      };
+    });
+
+    return usersMapped;
   };
 
   static listInvitationsForEvent = async (event: Event, request: Request, response: Response) => {
