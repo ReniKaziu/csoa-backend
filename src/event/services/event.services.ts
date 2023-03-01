@@ -1026,60 +1026,108 @@ export class EventService {
         }
 
         if (eventToBeCompleted === true && updatedEvent.status === EventStatus.COMPLETED) {
-          //Insert teamUser
-          const teamUsersPayload = [];
-          const organiserTeamFormation = updatedEvent.lineups.organiserTeam.playersFormation;
-          const receiverTeamFormation = updatedEvent.lineups.receiverTeam.playersFormation;
-          for (const organiserPlayer in organiserTeamFormation) {
-            const playerId = organiserTeamFormation[organiserPlayer].id;
-            const teamId = updatedEvent.organiserTeamId;
-            const sport = updatedEvent.sport;
-            const teamUserBody = [playerId, teamId, RequestStatus.CONFIRMED, sport];
-            teamUsersPayload.push(teamUserBody);
-          }
-          for (const receiverPlayer in receiverTeamFormation) {
-            const playerId = receiverTeamFormation[receiverPlayer].id;
-            const teamId = updatedEvent.receiverTeamId;
-            const sport = updatedEvent.sport;
-            const teamUserBody = [playerId, teamId, RequestStatus.CONFIRMED, sport];
-            teamUsersPayload.push(teamUserBody);
-          }
+          if (currentEvent.isTeam) {
+            const teamsIds = [currentEvent.organiserTeamId, currentEvent.receiverTeamId];
+            const organiserPlayersIds = [];
+            const receiverPlayersIds = [];
+            const organiserTeamFormation = updatedEvent.lineups.organiserTeam.playersFormation;
+            const receiverTeamFormation = updatedEvent.lineups.receiverTeam.playersFormation;
+            for (const organiserPlayer in organiserTeamFormation) {
+              organiserPlayersIds.push(organiserTeamFormation[organiserPlayer].id);
+            }
+            for (const receiverPlayer in receiverTeamFormation) {
+              receiverPlayersIds.push(receiverTeamFormation[receiverPlayer].id);
+            }
 
-          const teamUsers = await teamUsersRepository
-            .createQueryBuilder()
-            .insert()
-            .into(TeamUsers)
-            .values(
-              teamUsersPayload.map((item) => {
-                return {
-                  playerId: item[0],
-                  teamId: item[1],
-                  status: item[2],
-                  sport: item[3],
-                };
-              })
-            )
-            .execute();
+            const organiserTeamUsers = await teamUsersRepository
+              .createQueryBuilder("tu")
+              .where("tu.teamId = :teamId", { teamId: currentEvent.organiserTeamId })
+              .andWhere("tu.playerId IN (:...organiserPlayersIds)", { organiserPlayersIds })
+              .andWhere("tu.status = :status", { status: RequestStatus.CONFIRMED })
+              .getMany();
+            const receiverTeamUsers = await teamUsersRepository
+              .createQueryBuilder("tu")
+              .where("tu.teamId = :teamId", { teamId: currentEvent.receiverTeamId })
+              .andWhere("tu.playerId IN (:...receiverPlayersIds)", { receiverPlayersIds })
+              .andWhere("tu.status = :status", { status: RequestStatus.CONFIRMED })
+              .getMany();
 
-          const eventTeamUsersPayload = [];
-          for (const tu of teamUsers.generatedMaps) {
-            const eventTeamUserBody = [tu.id, updatedEvent.id];
-            eventTeamUsersPayload.push(eventTeamUserBody);
+            const teamUsers = [...organiserTeamUsers, ...receiverTeamUsers];
+
+            const eventTeamUsersPayload = [];
+            for (const tu of teamUsers) {
+              const eventTeamUserBody = [tu.id, updatedEvent.id];
+              eventTeamUsersPayload.push(eventTeamUserBody);
+            }
+
+            await eventTeamUsersRepository
+              .createQueryBuilder()
+              .insert()
+              .into(EventTeamUsers)
+              .values(
+                eventTeamUsersPayload.map((item) => {
+                  return {
+                    teamUserId: item[0],
+                    eventId: item[1],
+                  };
+                })
+              )
+              .execute();
+          } else {
+            const teamUsersPayload = [];
+            const organiserTeamFormation = updatedEvent.lineups.organiserTeam.playersFormation;
+            const receiverTeamFormation = updatedEvent.lineups.receiverTeam.playersFormation;
+            for (const organiserPlayer in organiserTeamFormation) {
+              const playerId = organiserTeamFormation[organiserPlayer].id;
+              const teamId = updatedEvent.organiserTeamId;
+              const sport = updatedEvent.sport;
+              const teamUserBody = [playerId, teamId, RequestStatus.CONFIRMED, sport];
+              teamUsersPayload.push(teamUserBody);
+            }
+            for (const receiverPlayer in receiverTeamFormation) {
+              const playerId = receiverTeamFormation[receiverPlayer].id;
+              const teamId = updatedEvent.receiverTeamId;
+              const sport = updatedEvent.sport;
+              const teamUserBody = [playerId, teamId, RequestStatus.CONFIRMED, sport];
+              teamUsersPayload.push(teamUserBody);
+            }
+
+            const teamUsers = await teamUsersRepository
+              .createQueryBuilder()
+              .insert()
+              .into(TeamUsers)
+              .values(
+                teamUsersPayload.map((item) => {
+                  return {
+                    playerId: item[0],
+                    teamId: item[1],
+                    status: item[2],
+                    sport: item[3],
+                  };
+                })
+              )
+              .execute();
+
+            const eventTeamUsersPayload = [];
+            for (const tu of teamUsers.generatedMaps) {
+              const eventTeamUserBody = [tu.id, updatedEvent.id];
+              eventTeamUsersPayload.push(eventTeamUserBody);
+            }
+
+            await eventTeamUsersRepository
+              .createQueryBuilder()
+              .insert()
+              .into(EventTeamUsers)
+              .values(
+                eventTeamUsersPayload.map((item) => {
+                  return {
+                    teamUserId: item[0],
+                    eventId: item[1],
+                  };
+                })
+              )
+              .execute();
           }
-
-          const eventTeamUsers = await eventTeamUsersRepository
-            .createQueryBuilder()
-            .insert()
-            .into(EventTeamUsers)
-            .values(
-              eventTeamUsersPayload.map((item) => {
-                return {
-                  teamUserId: item[0],
-                  eventId: item[1],
-                };
-              })
-            )
-            .execute();
 
           // const eventPlayers = await eventTeamsUsersRepository
           //   .createQueryBuilder("etu")

@@ -23,7 +23,7 @@ export class TeamRouter {
     app.post("/teams/:teamId/attachments", [
       AuthenticationMiddleware.checkJwtToken,
       PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
-      UploadMiddleware.validateFileUpload("file", ["jpg", "png", "jpeg"], 8),
+      UploadMiddleware.validateFileUpload("file", ["jpg", "png", "jpeg", "mp4"], 8),
       PermissionMiddleware.checkIfTeamCreator,
       TeamController.upload,
     ]);
