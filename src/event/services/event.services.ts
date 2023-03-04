@@ -143,7 +143,6 @@ export class EventService {
       .andWhere("event.id NOT IN (:...myEventIds)", { myEventIds });
 
     const qbPage = +request.query.page >= 1 ? +request.query.page - 1 : 0;
-    console.log({ qbPage });
 
     qb.limit(15);
     qb.offset(qbPage * 15);
@@ -152,7 +151,6 @@ export class EventService {
 
     let hasNextPage = true;
     const page = +request.query.page >= 1 ? +request.query.page : 1;
-    console.log({ page });
 
     if (publicEvents[1] <= page * 15) {
       hasNextPage = false;
@@ -199,6 +197,8 @@ export class EventService {
     const publicEventsResults = publicEventsWithoutWeekly.concat(publicEventsWeekly)?.sort((a, b) => {
       return a.startDate > b.startDate ? 1 : -1;
     });
+
+    console.log({ lengh: publicEventsResults.length });
 
     const responseData = {
       myEvents: myEventsResults.map((event) => event.toResponse),
