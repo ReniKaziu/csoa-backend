@@ -145,8 +145,8 @@ export class EventService {
     const qbPage = +request.query.page >= 1 ? +request.query.page - 1 : 0;
     console.log({ qbPage });
 
-    qb.limit(10);
-    qb.offset(qbPage * 10);
+    qb.limit(15);
+    qb.offset(qbPage * 15);
 
     const publicEvents = await qb.getManyAndCount();
 
@@ -154,7 +154,7 @@ export class EventService {
     const page = +request.query.page >= 1 ? +request.query.page : 1;
     console.log({ page });
 
-    if (publicEvents[1] <= page * 10) {
+    if (publicEvents[1] <= page * 15) {
       hasNextPage = false;
     }
 
