@@ -8,19 +8,13 @@ export class EventRouter {
   static configRoutes = (app: express.Application) => {
     app.get("/my-events", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([
-        UserRole.USER,
-        UserRole.ADMIN,
-      ]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
       EventController.listMyEvents,
     ]);
 
     app.post("/events", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([
-        UserRole.USER,
-        UserRole.ADMIN,
-      ]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
       EventController.insert,
     ]);
 
@@ -38,19 +32,13 @@ export class EventRouter {
 
     app.get("/events/:id/players", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([
-        UserRole.ADMIN,
-        UserRole.USER,
-      ]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.ADMIN, UserRole.USER]),
       EventController.getPlayers,
     ]);
 
     app.post("/admin/events", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([
-        UserRole.ADMIN,
-        UserRole.COMPNAY,
-      ]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.ADMIN, UserRole.COMPNAY]),
       EventController.createAdminEvent,
     ]);
 
@@ -62,20 +50,14 @@ export class EventRouter {
 
     app.delete("/events/:eventId", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([
-        UserRole.COMPNAY,
-        UserRole.USER,
-      ]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.COMPNAY, UserRole.USER]),
       PermissionMiddleware.checkIfEventCreatorOrCompany,
       EventController.delete,
     ]);
 
     app.delete("/events/:eventId/cancel", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([
-        UserRole.COMPNAY,
-        UserRole.USER,
-      ]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.COMPNAY, UserRole.USER]),
       PermissionMiddleware.checkIfEventCreatorOrCompany,
       EventController.cancel,
     ]);
@@ -89,32 +71,20 @@ export class EventRouter {
 
     app.get("/events/:eventId", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkMeOrPermissionsAllowed([
-        UserRole.USER,
-        UserRole.COMPNAY,
-        UserRole.ADMIN,
-      ]),
+      PermissionMiddleware.checkMeOrPermissionsAllowed([UserRole.USER, UserRole.COMPNAY, UserRole.ADMIN]),
       EventController.getById,
     ]);
 
     app.patch("/events/:eventId", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([
-        UserRole.USER,
-        UserRole.COMPNAY,
-        UserRole.ADMIN,
-      ]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.COMPNAY, UserRole.ADMIN]),
       PermissionMiddleware.checkIfEventCreatorOrCompany,
       EventController.patchById,
     ]);
 
     app.patch("/events/:eventId/single-event", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([
-        UserRole.USER,
-        UserRole.COMPNAY,
-        UserRole.ADMIN,
-      ]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.COMPNAY, UserRole.ADMIN]),
       EventController.patchSingleEvent,
     ]);
   };

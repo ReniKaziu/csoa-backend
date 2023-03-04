@@ -142,11 +142,18 @@ export class EventService {
       )
       .andWhere("event.id NOT IN (:...myEventIds)", { myEventIds });
 
-    const page = +request.query.page - 1;
+    const qbPage = +request.query.page >= 1 ? +request.query.page - 1 : 0;
     qb.limit(10);
-    qb.offset(page * 10);
+    qb.offset(qbPage * 10);
 
-    const publicEvents = await qb.getMany();
+    const publicEvents = await qb.getManyAndCount();
+
+    let hasNextPage = true;
+    const page = +request.query.page >= 1 ? +request.query.page : 1;
+
+    if (publicEvents[1] <= page * 10) {
+      hasNextPage = false;
+    }
 
     const myEventsMap = {};
     const myEventsWeekly = [];
@@ -172,7 +179,7 @@ export class EventService {
     const publicEventsMap = {};
     const publicEventsWeekly = [];
 
-    for (const publicEvent of publicEvents) {
+    for (const publicEvent of publicEvents[0]) {
       if (publicEvent.weeklyGroupedId) {
         if (!publicEventsMap[publicEvent.weeklyGroupedId]) {
           publicEventsMap[publicEvent.weeklyGroupedId] = 1;
@@ -184,7 +191,7 @@ export class EventService {
       }
     }
 
-    const publicEventsWithoutWeekly = publicEvents.filter((event) => event.weeklyGroupedId === null);
+    const publicEventsWithoutWeekly = publicEvents[0].filter((event) => event.weeklyGroupedId === null);
 
     const publicEventsResults = publicEventsWithoutWeekly.concat(publicEventsWeekly)?.sort((a, b) => {
       return a.startDate > b.startDate ? 1 : -1;
@@ -193,6 +200,7 @@ export class EventService {
     const responseData = {
       myEvents: myEventsResults.map((event) => event.toResponse),
       publicEvents: publicEventsResults.map((event) => event.toResponse),
+      hasNextPage,
     };
 
     return responseData;
