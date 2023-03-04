@@ -143,6 +143,8 @@ export class EventService {
       .andWhere("event.id NOT IN (:...myEventIds)", { myEventIds });
 
     const qbPage = +request.query.page >= 1 ? +request.query.page - 1 : 0;
+    console.log({ qbPage });
+
     qb.limit(10);
     qb.offset(qbPage * 10);
 
@@ -150,6 +152,7 @@ export class EventService {
 
     let hasNextPage = true;
     const page = +request.query.page >= 1 ? +request.query.page : 1;
+    console.log({ page });
 
     if (publicEvents[1] <= page * 10) {
       hasNextPage = false;
