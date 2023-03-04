@@ -148,6 +148,7 @@ export class EventService {
     qb.offset(qbPage * 15);
 
     const publicEvents = await qb.getManyAndCount();
+    console.log({ l: publicEvents[1] });
 
     let hasNextPage = true;
     const page = +request.query.page >= 1 ? +request.query.page : 1;
