@@ -349,7 +349,6 @@ export const checkForEventsTomorrow = async () => {
                                 FROM events event
                                   WHERE ( status = 'confirmed' AND twoHoursBeforeCronSent = 0 AND startDate > '${dateNow.toISOString()}' AND startDate <= '${oneDayLater.toISOString()}')
                                   AND ( event.ts_deleted IS NULL )`;
-  const insertNotificationQuery = `INSERT INTO notifications(payload, type, receiverId) VALUES ?`;
 
   // 1- Select events two hours later
   const tomorrowEvents = await eventsRepository.manager.query(selectEventsQuery);

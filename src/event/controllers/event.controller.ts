@@ -7,6 +7,11 @@ import { HttpStatusCode } from "../../common/utilities/HttpStatusCodes";
 import { Mailer } from "../../common/utilities/Mailer";
 import { SuccessResponse } from "../../common/utilities/SuccessResponse";
 import { Location } from "../../complex/entities/location.entity";
+import {
+  checkForCompletedEvents,
+  checkForEventsTomorrow,
+  checkForEventsTwoHoursLater,
+} from "../../crones/crones.service";
 import { NotificationType } from "../../notifications/entities/notification.entity";
 import { NotificationService } from "../../notifications/services/notification.services";
 import { Request as Invitations, RequestStatus } from "../../request/entities/request.entity";
@@ -111,8 +116,39 @@ export class EventController {
     }
   };
 
+  static twoHoursLater = async (request, response) => {
+    try {
+      await checkForEventsTwoHoursLater();
+      return response.status(HttpStatusCode.OK).send(new SuccessResponse("success"));
+    } catch (err) {
+      console.log({ err });
+      return response.status(404).send(new ErrorResponse("Could not get my events list"));
+    }
+  };
+
+  static completedEvent = async (request, response) => {
+    try {
+      await checkForCompletedEvents();
+      return response.status(HttpStatusCode.OK).send(new SuccessResponse("success"));
+    } catch (err) {
+      console.log({ err });
+      return response.status(404).send(new ErrorResponse("Could not get my events list"));
+    }
+  };
+
+  static eventsTomorrow = async (request, response) => {
+    try {
+      await checkForEventsTomorrow();
+      return response.status(HttpStatusCode.OK).send(new SuccessResponse("success"));
+    } catch (err) {
+      console.log({ err });
+      return response.status(404).send(new ErrorResponse("Could not get my events list"));
+    }
+  };
+
   static confirm = async (request: Request, response: Response) => {
     const weeklyGroupedId = +request.query.weeklyGroupedId;
+    const notes = request.body.notes ?? null;
     const firstArgument = {
       ...(!weeklyGroupedId && { id: +request.params.eventId }),
       ...(weeklyGroupedId && { weeklyGroupedId }),
@@ -121,6 +157,7 @@ export class EventController {
     try {
       const event = await getRepository(Event).update(firstArgument, {
         status: EventStatus.CONFIRMED,
+        notes,
       });
 
       const creator = await getRepository(User).findOne({

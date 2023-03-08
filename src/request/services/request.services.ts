@@ -14,6 +14,7 @@ import { TeamUsersRepository } from "../../team/repositories/team.users.reposito
 import { NotificationService } from "../../notifications/services/notification.services";
 import { UserService } from "../../user/services/user.service";
 import { ReviewRepository } from "../../review/repositories/review.repository";
+import { EventService } from "../../event/services/event.services";
 
 export class RequestService {
   static listPossibleUsersForEvent = async (event: Event, request: Request, response: Response) => {
@@ -244,6 +245,12 @@ export class RequestService {
     if (response.locals.jwt.userId === request.event.creatorId) {
       const creator = await UserService.findOne(response.locals.jwt.userId);
       if (request.receiverTeamId) {
+        const event = await EventService.findById(request.eventId, false);
+        if (event.lineups["receiverTeam"]) {
+          event.lineups["receiverTeam"] = {};
+        }
+        event.receiverTeamId = null;
+
         const teamPlayers = await teamUsersRepository
           .createQueryBuilder("tu")
           .leftJoinAndSelect("tu.player", "player")
@@ -263,7 +270,8 @@ export class RequestService {
             creator.name
           );
         }
-        await eventRepository.update({ id: request.eventId }, { receiverTeamId: null });
+
+        await eventRepository.save(event);
       } else {
         await NotificationService.createRequestNotification(
           request.receiverId,
@@ -277,6 +285,11 @@ export class RequestService {
       }
     } else {
       if (request.receiverTeamId) {
+        const event = await EventService.findById(request.eventId, false);
+        if (event.lineups["receiverTeam"]) {
+          event.lineups["receiverTeam"] = {};
+        }
+        event.receiverTeamId = null;
         const creator = await UserService.findOne(request.event.creatorId);
         const teamPlayers = await teamUsersRepository
           .createQueryBuilder("tu")
@@ -305,7 +318,7 @@ export class RequestService {
             request.event.sport,
             request.receiverTeam.name
           );
-          await eventRepository.update({ id: request.eventId }, { receiverTeamId: null });
+          await eventRepository.save(event);
         }
       } else {
         const creator = await UserService.findOne(request.event.creatorId);

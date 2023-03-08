@@ -6,6 +6,21 @@ import { EventController } from "./controllers/event.controller";
 
 export class EventRouter {
   static configRoutes = (app: express.Application) => {
+    app.post("/events/eventsTomorrow", [
+      AuthenticationMiddleware.checkJwtToken,
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
+      EventController.eventsTomorrow,
+    ]);
+    app.post("/events/twoHoursLater", [
+      AuthenticationMiddleware.checkJwtToken,
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
+      EventController.twoHoursLater,
+    ]);
+    app.post("/events/completedEvents", [
+      AuthenticationMiddleware.checkJwtToken,
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
+      EventController.completedEvent,
+    ]);
     app.get("/my-events", [
       AuthenticationMiddleware.checkJwtToken,
       PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),

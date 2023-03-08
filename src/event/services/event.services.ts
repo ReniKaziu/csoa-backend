@@ -148,7 +148,6 @@ export class EventService {
     qb.offset(qbPage * 15);
 
     const publicEvents = await qb.getManyAndCount();
-    console.log({ l: publicEvents[0].length });
 
     let hasNextPage = true;
     const page = +request.query.page >= 1 ? +request.query.page : 1;
@@ -198,8 +197,6 @@ export class EventService {
     const publicEventsResults = publicEventsWithoutWeekly.concat(publicEventsWeekly)?.sort((a, b) => {
       return a.startDate > b.startDate ? 1 : -1;
     });
-
-    console.log({ lengh: publicEventsResults.length });
 
     const responseData = {
       myEvents: myEventsResults.map((event) => event.toResponse),
@@ -370,9 +367,9 @@ export class EventService {
         organiserTeamId,
       },
     } = request;
-    if (new Date(startDate) < new Date()) {
-      throw new Error("Ora e eventit nuk mund te jete ne te shkuaren!");
-    }
+    // if (new Date(startDate) < new Date()) {
+    //   throw new Error("Ora e eventit nuk mund te jete ne te shkuaren!");
+    // }
 
     const queryRunner = getManager().connection.createQueryRunner();
     await queryRunner.connect();
