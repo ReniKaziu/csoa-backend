@@ -29,7 +29,7 @@ export class EventService {
     let oneDayLater = Functions.formatOneDayLaterDate(new Date());
     const userId = +response.locals.jwt.userId;
     const user = await UserService.findOne(userId);
-    const age = Functions.getAge(user.birthday);
+    const age = Functions.getAge(user?.birthday);
 
     let mySports = [];
     for (const sport in user.sports as any) {
