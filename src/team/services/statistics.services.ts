@@ -5,6 +5,7 @@ import { TeamUsersRepository } from "../repositories/team.users.repository";
 
 export class StatisticsService {
   static getWins = async (ids: number[]) => {
+    ids = ids.length ? ids : [-1];
     const eventCustomRepository = getCustomRepository(EventRepository);
     return await eventCustomRepository
       .createQueryBuilder("events")
@@ -24,6 +25,7 @@ export class StatisticsService {
   };
 
   static getLoses = async (ids: number[]) => {
+    ids = ids.length ? ids : [-1];
     const eventCustomRepository = getCustomRepository(EventRepository);
     return await eventCustomRepository
       .createQueryBuilder("events")
@@ -43,6 +45,7 @@ export class StatisticsService {
   };
 
   static getDraws = async (ids: number[]) => {
+    ids = ids.length ? ids : [-1];
     const eventCustomRepository = getCustomRepository(EventRepository);
     return await eventCustomRepository
       .createQueryBuilder("events")
@@ -90,11 +93,7 @@ export class StatisticsService {
     const wins = await teamUsersCustomRepository
       .createQueryBuilder("tu")
       .innerJoin("event_teams_users", "etu", "tu.id = etu.teamUserId")
-      .innerJoin(
-        "events",
-        "e",
-        "etu.eventId = e.id and tu.teamId = e.winnerTeamId"
-      )
+      .innerJoin("events", "e", "etu.eventId = e.id and tu.teamId = e.winnerTeamId")
       .select("e.id as eventId, tu.teamId as teamId")
       .where(`tu.sport = '${sport}'`)
       .andWhere(`tu.playerId = ${id}`)
@@ -103,11 +102,7 @@ export class StatisticsService {
     const loses = await teamUsersCustomRepository
       .createQueryBuilder("tu")
       .innerJoin("event_teams_users", "etu", "tu.id = etu.teamUserId")
-      .innerJoin(
-        "events",
-        "e",
-        "etu.eventId = e.id and tu.teamId = e.loserTeamId"
-      )
+      .innerJoin("events", "e", "etu.eventId = e.id and tu.teamId = e.loserTeamId")
       .select("e.id as eventId, tu.teamId as teamId")
       .where(`tu.sport = '${sport}'`)
       .andWhere(`tu.playerId = ${id}`)

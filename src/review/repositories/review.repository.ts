@@ -7,7 +7,7 @@ export class ReviewRepository extends CommonRepository<Review> {
   getStars(ids: number[], sport?: string) {
     return this.createQueryBuilder("r")
       .select("SUM(r.value)/COUNT(r.id) as stars, receiverId as userId, sport")
-      .where("r.receiverId IN (:...ids)", { ids })
+      .where("r.receiverId IN (:...ids)", { ids: ids.length ? ids : [-1] })
       .andWhere(sport ? `r.sport = '${sport}'` : "true")
       .groupBy("r.receiverId, r.sport")
       .getRawMany();

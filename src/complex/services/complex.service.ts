@@ -150,7 +150,8 @@ export class ComplexService {
       .getRawMany();
   }
 
-  static getFilteredEvents(request) {
+  static async getFilteredEvents(request) {
+    const qbPage = +request.query.page >= 1 ? +request.query.page - 1 : 0;
     const { body } = request;
     let userReserved = `(e.isUserReservation = 1 OR e.isUserReservation = 0)`;
 
@@ -169,12 +170,12 @@ export class ComplexService {
     body.isWeekly ? (isWeekly = `(e.isWeekly = 1 OR e.isWeekly = 0)`) : isWeekly;
 
     const eventRepository = getCustomRepository(EventRepository);
-    return eventRepository
+    const events = await eventRepository
       .createQueryBuilder("e")
       .withDeleted()
-      .select(
-        "e.id, u.name, u.phoneNumber as phoneNumber, e.organiserPhone as organiserPhone, e.notes as notes, e.startDate, e.endDate, l.name as locationName, l.price, l.id as locationId, e.sport, e.status, e.isUserReservation, e.isConfirmedByUser, e.isWeekly"
-      )
+      // .select(
+      //   "e.id, u.name, u.phoneNumber as phoneNumber, e.organiserPhone as organiserPhone, e.notes as notes, e.startDate, e.endDate, l.name as locationName, l.price, l.id as locationId, e.sport, e.status, e.isUserReservation, e.isConfirmedByUser, e.isWeekly"
+      // )
       .innerJoin("locations", "l", "l.id = e.locationId")
       .innerJoin("complexes", "c", "c.id = l.complexId")
       .innerJoin("users", "u", "u.id = e.creatorId")
@@ -187,8 +188,18 @@ export class ComplexService {
       .andWhere("e.endDate <= :endDate", { endDate: body.time.to })
       .andWhere(`${isWeekly}`)
       .orderBy("e.id", "DESC")
-      .limit(24 * 62)
-      .getRawMany();
+      .limit(15)
+      .offset(qbPage * 15)
+      .getManyAndCount();
+
+    let hasNextPage = true;
+    const page = +request.query.page >= 1 ? +request.query.page : 1;
+
+    if (events[1] <= page * 15) {
+      hasNextPage = false;
+    }
+
+    return [events[0], hasNextPage];
   }
 
   static fetchEventsByLocationdId(request) {

@@ -130,8 +130,8 @@ export class ComplexController {
 
   static getFilteredEvents = async (request: Request, response: Response) => {
     try {
-      const events = await ComplexService.getFilteredEvents(request);
-      return response.status(HttpStatusCode.OK).send(new SuccessResponse({ events }));
+      const [events, hasNextPage] = await ComplexService.getFilteredEvents(request);
+      return response.status(HttpStatusCode.OK).send(new SuccessResponse({ events, hasNextPage }));
     } catch (err) {
       console.log({ err });
       return response.status(404).send(new ErrorResponse("Could not get events for this complex"));

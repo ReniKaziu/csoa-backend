@@ -46,6 +46,7 @@ export class RequestService {
         } else userQb += ` OR '%${sport}-${position}%' `;
       });
       userQb += ")";
+
       possibleUsers.andWhere(userQb);
     }
 

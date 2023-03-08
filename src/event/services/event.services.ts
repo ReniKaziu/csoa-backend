@@ -107,7 +107,7 @@ export class EventService {
       })
       .andWhere("event.minAge < :age", { age })
       .andWhere("event.maxAge > :age", { age })
-      .andWhere("complex.city = :userCity", { userCity: user.address })
+      .andWhere("complex.city = :userCity", { userCity: user?.address })
       .andWhere(
         new Brackets((qb) => {
           qb.where("request.receiverId != :receiverId", {
@@ -146,6 +146,7 @@ export class EventService {
 
     qb.limit(15);
     qb.offset(qbPage * 15);
+    qb.orderBy("event.startDate", "ASC");
 
     const publicEvents = await qb.getManyAndCount();
 
