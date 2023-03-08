@@ -32,7 +32,7 @@ export class EventService {
     const age = Functions.getAge(user?.birthday);
 
     let mySports = [];
-    for (const sport in user.sports as any) {
+    for (const sport in user?.sports as any) {
       if (user.sports[sport].picked) {
         mySports.push(sport);
       }
