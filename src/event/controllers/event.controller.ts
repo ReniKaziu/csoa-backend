@@ -160,9 +160,6 @@ export class EventController {
         notes,
       });
 
-      const creator = await getRepository(User).findOne({
-        where: { id: foundEvent.creatorId },
-      });
       const eventPlayers = await getRepository(Invitations)
         .createQueryBuilder("r")
         .leftJoinAndSelect("r.receiver", "receiver")

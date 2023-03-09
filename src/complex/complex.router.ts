@@ -74,7 +74,7 @@ export class ComplexRouter {
     app.post("/complexes/:complexId/attachments", [
       AuthenticationMiddleware.checkJwtToken,
       PermissionMiddleware.checkAllowedPermissions([UserRole.COMPNAY]),
-      UploadMiddleware.validateFileUpload("file", ["jpg", "png", "jpeg"], 8),
+      UploadMiddleware.validateFileUpload("file", ["mp4", "jpg", "png", "jpeg"], 8),
       ComplexController.upload,
     ]);
 

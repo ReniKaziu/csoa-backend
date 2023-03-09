@@ -107,7 +107,7 @@ export class UserRouter {
     app.post("/users/:userId/attachments", [
       AuthenticationMiddleware.checkJwtToken,
       PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
-      UploadMiddleware.validateFileUpload("file", ["jpg", "png", "jpeg"], 8),
+      UploadMiddleware.validateFileUpload("file", ["mp4", "jpg", "png", "jpeg"], 8),
       UserController.upload,
     ]);
 
