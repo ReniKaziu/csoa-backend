@@ -108,7 +108,6 @@ export class UserRouter {
       AuthenticationMiddleware.checkJwtToken,
       PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
       UploadMiddleware.validateFileUpload("file", ["mp4", "jpg", "png", "jpeg"], 8),
-      UploadMiddleware.validateFileUpload("videoFile", ["mp4"], 2),
       UserController.upload,
     ]);
 

@@ -515,7 +515,7 @@ export class UserService {
   }
 
   static upload = async (request: Request, response: Response) => {
-    if (request.files.length) {
+    if (request.files?.length) {
       const files = [...(request.files as any)];
       const attachmentRepository = getCustomRepository(AtachmentRepository);
       return attachmentRepository
