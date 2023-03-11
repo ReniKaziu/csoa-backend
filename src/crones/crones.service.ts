@@ -285,13 +285,12 @@ export const checkForEventsTwoHoursLater = async () => {
           const pushNotificationBody = {
             to: player.pushToken ?? "123",
             title: `Rikujtese! Eventi: ${event.name} nis pas 2 oresh.`,
-            body: "Futuni ne aplikacion dhe shikoni me shuresult.organiserTeamCaptainIdme",
+            body: "Futuni ne aplikacion dhe shikoni me shume",
             data: { eventId: event.id },
           };
           notifications.push(notificationBody);
           pushNotifications.push(pushNotificationBody);
         }
-        console.log({ notifications });
       }
     }
   }
