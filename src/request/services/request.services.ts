@@ -25,7 +25,6 @@ export class RequestService {
     const sport = event.sport;
     const possibleUsers = usersRepository
       .createQueryBuilder("user")
-      .leftJoinAndSelect("user.receivedReviews", "review")
       .where(`user.sports LIKE '%"${sport}": {"picked": true%'`)
       .andWhere("user.ts_deleted IS NULL")
       .andWhere(
@@ -57,9 +56,17 @@ export class RequestService {
     }
 
     if (request.body.rating) {
-      possibleUsers.andWhere(
-        `(SELECT SUM(review.value)/COUNT(review.id) AS averageRating group by review.receiverId, review.sport having averageRating >= ${request.body.rating.minRating} and averageRating <= ${request.body.rating.maxRating})`
-      );
+      const ratedUsers = await reviewsRepository
+        .createQueryBuilder("r")
+        .select("SUM(r.value)/COUNT(r.id) as averageRating, r.receiverId as receiverId")
+        .groupBy("r.receiverId, r.sport")
+        .having("averageRating >= :value", { value: request.body.rating.minRating })
+        .andHaving("averageRating <= :value1", { value1: request.body.rating.maxRating })
+        .getRawMany();
+
+      const ids = ratedUsers.map((user) => user.receiverId).concat([-1]);
+
+      possibleUsers.andWhere("user.id IN (:...ids)", { ids });
     }
 
     if (request.body.playedBefore === true) {

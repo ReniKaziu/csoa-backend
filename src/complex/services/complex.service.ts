@@ -190,6 +190,7 @@ export class ComplexService {
       .orderBy("e.id", "DESC")
       .limit(15)
       .offset(qbPage * 15)
+      .orderBy("e.startDate", "ASC")
       .getManyAndCount();
 
     let hasNextPage = true;

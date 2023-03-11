@@ -291,6 +291,7 @@ export const checkForEventsTwoHoursLater = async () => {
           notifications.push(notificationBody);
           pushNotifications.push(pushNotificationBody);
         }
+        console.log({ notifications });
       }
     }
   }
