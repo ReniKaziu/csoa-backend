@@ -75,8 +75,12 @@ export class UserService {
 
     for (const sport in userPayload["sports"]) {
       if (userPayload["sports"][sport]["picked"]) {
-        userPayload["sports"][sport]["positionMapped"] = `${sport}-${userPayload["sports"][sport]["position"]}`;
-        userPayload["sports"][sport]["experienceMapped"] = `${sport}-${userPayload["sports"][sport]["experience"]}`;
+        userPayload["sports"][sport][
+          "positionMapped"
+        ] = `${sport}-position-${userPayload["sports"][sport]["position"]}`;
+        userPayload["sports"][sport][
+          "experienceMapped"
+        ] = `${sport}-experience-${userPayload["sports"][sport]["experience"]}`;
       }
     }
 
@@ -312,8 +316,8 @@ export class UserService {
       for (const key in user.sports[sport]) {
         if (user.sports[sport][key] !== sportsPayload[sport][key]) {
           user.sports[sport][key] = sportsPayload[sport][key];
-          user.sports[sport]["positionMapped"] = `${sport}-${sportsPayload[sport]["position"]}`;
-          user.sports[sport]["experienceMapped"] = `${sport}-${sportsPayload[sport]["experience"]}`;
+          user.sports[sport]["positionMapped"] = `${sport}-position-${sportsPayload[sport]["position"]}`;
+          user.sports[sport]["experienceMapped"] = `${sport}-experience-${sportsPayload[sport]["experience"]}`;
 
           if (key === "rating") {
             const reviewRepository = getRepository(Review);

@@ -8,10 +8,16 @@ import { TeamUsersRepository } from "../repositories/team.users.repository";
 import { NotificationType } from "../../notifications/entities/notification.entity";
 import { NotificationService } from "../../notifications/services/notification.services";
 import { UserService } from "../../user/services/user.service";
+import { ReviewRepository } from "../../review/repositories/review.repository";
+import { EventRepository } from "../../event/repositories/event.repository";
+import { EventStatus } from "../../event/entities/event.entity";
 
 export class TeamUsersService {
   static listPossiblePlayers = async (team: Team, request: Request, response: Response) => {
     const usersRepository = getCustomRepository(UserRepository);
+    const reviewsRepository = getCustomRepository(ReviewRepository);
+    const teamsUsersRepository = getCustomRepository(TeamUsersRepository);
+    const eventRepository = getCustomRepository(EventRepository);
     const sport = team.sport;
     const sportsMapped = {
       Futboll: "football",
@@ -31,8 +37,8 @@ export class TeamUsersService {
     if (request.body.positions?.length) {
       request.body.positions.forEach((position, _index) => {
         if (_index === 0) {
-          userQb += `LIKE '%${position}%' `;
-        } else userQb += ` OR '%${position}%' `;
+          userQb += `LIKE '%${sportsMapped[sport]}-position-${position}%' `;
+        } else userQb += ` OR user.sports LIKE '%${sportsMapped[sport]}-position-${position}%' `;
       });
       userQb += ")";
       possibleUsers.andWhere(userQb);
@@ -40,39 +46,47 @@ export class TeamUsersService {
 
     if (request.body.level) {
       const level = request.body.level;
-      possibleUsers.andWhere(`user.sports LIKE '%${level}%'`);
+      possibleUsers.andWhere(`user.sports LIKE '%${sportsMapped[sport]}-experience-${level}%'`);
     }
 
     if (request.body.rating) {
-      possibleUsers.andWhere(
-        `(SELECT SUM(review.value)/COUNT(review.id) AS averageRating group by review.receiverId, review.sport having averageRating >= ${request.body.rating.minRating} and averageRating <= ${request.body.rating.maxRating})`
-      );
+      const ratedUsers = await reviewsRepository
+        .createQueryBuilder("r")
+        .select("SUM(r.value)/COUNT(r.id) as averageRating, r.receiverId as receiverId")
+        .groupBy("r.receiverId, r.sport")
+        .having("averageRating >= :value", { value: request.body.rating.minRating })
+        .andHaving("averageRating <= :value1", { value1: request.body.rating.maxRating })
+        .getRawMany();
+
+      const ids = ratedUsers.map((user) => user.receiverId).concat([-1]);
+
+      possibleUsers.andWhere("user.id IN (:...ids)", { ids });
     }
 
-    // if (request.body.playedBefore === true) {
-    //   const myTeams = await teamsUsersRepository
-    //     .createQueryBuilder("tu")
-    //     .select("tu.teamId")
-    //     .where("tu.playerId = :userId", { userId: response.locals.jwt.userId })
-    //     .getMany();
+    if (request.body.playedBefore === true) {
+      const myTeams = await teamsUsersRepository
+        .createQueryBuilder("tu")
+        .select("tu.teamId")
+        .where("tu.playerId = :userId", { userId: response.locals.jwt.userId })
+        .getMany();
 
-    //   const myTeamsMapped = myTeams.map((el) => el.teamId);
+      const myTeamsMapped = myTeams.map((el) => el.teamId).concat([-1]);
 
-    //   const usersPlayedBefore = await eventRepository
-    //     .createQueryBuilder("e")
-    //     .select("DISTINCT u.id")
-    //     .innerJoin("teams_users", "tu", "e.organiserTeamId = tu.teamId OR e.receiverTeamId = tu.teamId")
-    //     .innerJoin("event_teams_users", "etu", "tu.id = etu.teamUserId and e.id = etu.eventId")
-    //     .innerJoin("users", "u", "u.id = tu.playerId")
-    //     .where("e.status = :status", { status: EventStatus.COMPLETED })
-    //     .andWhere(`tu.teamId NOT IN (${myTeamsMapped})`)
-    //     .andWhere(`(e.receiverTeamId IN (${myTeamsMapped}) or e.organiserTeamId IN (${myTeamsMapped}))`)
-    //     .getRawMany();
+      const usersPlayedBefore = await eventRepository
+        .createQueryBuilder("e")
+        .select("DISTINCT u.id")
+        .innerJoin("teams_users", "tu", "e.organiserTeamId = tu.teamId OR e.receiverTeamId = tu.teamId")
+        .innerJoin("event_teams_users", "etu", "tu.id = etu.teamUserId and e.id = etu.eventId")
+        .innerJoin("users", "u", "u.id = tu.playerId")
+        .where("e.status = :status", { status: EventStatus.COMPLETED })
+        .andWhere(`tu.teamId NOT IN (${myTeamsMapped})`)
+        .andWhere(`(e.receiverTeamId IN (${myTeamsMapped}) or e.organiserTeamId IN (${myTeamsMapped}))`)
+        .getRawMany();
 
-    //   const usersPlayedBeforeMapped = usersPlayedBefore.map((el) => el.id);
+      const usersPlayedBeforeMapped = usersPlayedBefore.map((el) => el.id).concat([-1]);
 
-    //   possibleUsers.andWhere(`user.id IN (${usersPlayedBeforeMapped})`);
-    // }
+      possibleUsers.andWhere(`user.id IN (${usersPlayedBeforeMapped})`);
+    }
 
     return possibleUsers.getMany();
   };

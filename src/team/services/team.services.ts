@@ -162,6 +162,12 @@ export class TeamService {
       }
     }
 
+    if (teamPayload.ageRange) {
+      const [minimumAge, maximumAge] = teamPayload.ageRange.split("-");
+      teamPayload.minAge = Number(minimumAge);
+      teamPayload.maxAge = Number(maximumAge);
+    }
+
     teamPayload.userId = response.locals.jwt.userId;
     const createdTeam = teamRepository.create(teamPayload);
     const savedTeam = await teamRepository.save(createdTeam);
@@ -247,6 +253,12 @@ export class TeamService {
           teamPayload.banner = file.path;
         }
       }
+    }
+
+    if (teamPayload.ageRange && teamPayload.ageRange !== currentTeam.ageRange) {
+      const [minimumAge, maximumAge] = teamPayload.ageRange.split("-");
+      currentTeam.minAge = Number(minimumAge);
+      currentTeam.maxAge = Number(maximumAge);
     }
     const mergedTeam = teamRepository.merge(currentTeam, teamPayload);
     const updatedTeam = await teamRepository.save(mergedTeam);

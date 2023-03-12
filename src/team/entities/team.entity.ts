@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany } from "typeorm";
+import { Column, Entity, Index, ManyToOne, OneToMany } from "typeorm";
 import { Attachment } from "../../attachment/entities/attachment.entity";
 import { Common } from "../../common/entities/common";
 import { Event } from "../../event/entities/event.entity";
@@ -29,6 +29,14 @@ export class Team extends Common {
 
   @Column("int", { nullable: true, name: "year" })
   public year: string;
+
+  @Index()
+  @Column("int", { nullable: true, name: "minAge" })
+  public minAge: number;
+
+  @Index()
+  @Column("int", { nullable: true, name: "maxAge" })
+  public maxAge: number;
 
   @Column("tinyint", { nullable: true, name: "isDummy", default: false })
   public isDummy: boolean;

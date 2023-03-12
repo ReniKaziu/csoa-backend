@@ -172,10 +172,9 @@ export class ComplexService {
     const eventRepository = getCustomRepository(EventRepository);
     const events = await eventRepository
       .createQueryBuilder("e")
-      .withDeleted()
-      // .select(
-      //   "e.id, u.name, u.phoneNumber as phoneNumber, e.organiserPhone as organiserPhone, e.notes as notes, e.startDate, e.endDate, l.name as locationName, l.price, l.id as locationId, e.sport, e.status, e.isUserReservation, e.isConfirmedByUser, e.isWeekly"
-      // )
+      .select(
+        "e.id, u.name, u.phoneNumber as phoneNumber, e.organiserPhone as organiserPhone, e.notes as notes, e.startDate, e.endDate, l.name as locationName, l.price, l.id as locationId, e.sport, e.status, e.isUserReservation, e.isConfirmedByUser, e.isWeekly"
+      )
       .innerJoin("locations", "l", "l.id = e.locationId")
       .innerJoin("complexes", "c", "c.id = l.complexId")
       .innerJoin("users", "u", "u.id = e.creatorId")
@@ -187,20 +186,36 @@ export class ComplexService {
       })
       .andWhere("e.endDate <= :endDate", { endDate: body.time.to })
       .andWhere(`${isWeekly}`)
-      .orderBy("e.id", "DESC")
       .limit(15)
       .offset(qbPage * 15)
       .orderBy("e.startDate", "ASC")
-      .getManyAndCount();
+      .withDeleted()
+      .getRawMany();
+
+    const eventsCount = await eventRepository
+      .createQueryBuilder("e")
+      .innerJoin("locations", "l", "l.id = e.locationId")
+      .innerJoin("complexes", "c", "c.id = l.complexId")
+      .innerJoin("users", "u", "u.id = e.creatorId")
+      .where("c.id = :id", { id: request.params.id })
+      .andWhere(statusCondition)
+      .andWhere(userReserved)
+      .andWhere("e.startDate >= :startDate", {
+        startDate: body.time.from,
+      })
+      .andWhere("e.endDate <= :endDate", { endDate: body.time.to })
+      .andWhere(`${isWeekly}`)
+      .withDeleted()
+      .getCount();
 
     let hasNextPage = true;
     const page = +request.query.page >= 1 ? +request.query.page : 1;
 
-    if (events[1] <= page * 15) {
+    if (eventsCount <= page * 15) {
       hasNextPage = false;
     }
 
-    return [events[0], hasNextPage];
+    return [events, hasNextPage];
   }
 
   static fetchEventsByLocationdId(request) {

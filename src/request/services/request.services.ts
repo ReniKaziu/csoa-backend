@@ -41,18 +41,23 @@ export class RequestService {
     if (request.body.positions?.length) {
       request.body.positions.forEach((position, _index) => {
         if (_index === 0) {
-          userQb += `LIKE '%${sport}-${position}%' `;
-        } else userQb += ` OR '%${sport}-${position}%' `;
+          userQb += `LIKE '%${sport}-position-${position}%' `;
+        } else userQb += ` OR user.sports '%${sport}-position-${position}%' `;
       });
       userQb += ")";
 
       possibleUsers.andWhere(userQb);
     }
 
+    if (request.body.qs) {
+      const name = request.body.qs;
+      possibleUsers.andWhere(`user.name LIKE '%${name}%'`);
+    }
+
     if (request.body.level) {
       const level = request.body.level;
 
-      possibleUsers.andWhere(`user.sports LIKE '%${sport}-${level}%'`);
+      possibleUsers.andWhere(`user.sports LIKE '%${sport}-experience-${level}%'`);
     }
 
     if (request.body.rating) {
@@ -102,7 +107,7 @@ export class RequestService {
     }
 
     const users = await possibleUsers.getMany();
-    const usersIds = users.map((user) => user.id);
+    const usersIds = users.map((user) => user.id).concat([-1]);
 
     const stars = await reviewsRepository.getStars(usersIds, sport);
 
@@ -118,14 +123,29 @@ export class RequestService {
 
   static listInvitationsForEvent = async (event: Event, request: Request, response: Response) => {
     const requestRepository = getCustomRepository(RequestRepository);
-    const requests = requestRepository
+    const reviewRepository = getCustomRepository(ReviewRepository);
+    const requests = await requestRepository
       .createQueryBuilder("request")
       .innerJoinAndSelect("request.receiver", "receiver")
       .where("request.eventId = :eventId", { eventId: event.id })
       // .andWhere("request.senderId != request.receiverId")
       .getMany();
 
-    return requests;
+    const ids = requests.map((request) => request.receiverId).concat([-1]);
+
+    const stars = await reviewRepository.getStars(ids, event.sport);
+
+    const requestsMapped = requests.map((request) => {
+      return {
+        ...request,
+        receiver: {
+          ...request.receiver,
+          averageReview: stars.find((review) => review.userId === request.receiverId),
+        },
+      };
+    });
+
+    return requestsMapped;
   };
 
   static inviteUser = async (event: Event, user: User, request: Request, response: Response) => {
@@ -254,7 +274,7 @@ export class RequestService {
       const creator = await UserService.findOne(response.locals.jwt.userId);
       if (request.receiverTeamId) {
         const event = await EventService.findById(request.eventId, false);
-        if (event.lineups["receiverTeam"]) {
+        if (event.lineups?.["receiverTeam"]) {
           event.lineups["receiverTeam"] = {};
         }
         event.receiverTeamId = null;
@@ -294,7 +314,7 @@ export class RequestService {
     } else {
       if (request.receiverTeamId) {
         const event = await EventService.findById(request.eventId, false);
-        if (event.lineups["receiverTeam"]) {
+        if (event.lineups?.["receiverTeam"]) {
           event.lineups["receiverTeam"] = {};
         }
         event.receiverTeamId = null;
@@ -572,7 +592,7 @@ export class RequestService {
       })
       .getMany();
 
-    const invitedTeamIds = requests.map((invitedTeam) => invitedTeam.receiverTeam.id).concat(-1);
+    const invitedTeamIds = requests.map((invitedTeam) => invitedTeam.receiverTeam.id).concat([-1]);
 
     const possibleTeams = teamsRepository
       .createQueryBuilder("team")
@@ -585,7 +605,6 @@ export class RequestService {
       .andWhere("team.id NOT IN (:...invitedTeams)", {
         invitedTeams: invitedTeamIds,
       })
-      .andWhere(`team.ageRange LIKE '%${event.playersAge}%'`)
       .andWhere("user.address = :complexCity", {
         complexCity: event.location.complex.city,
       });
@@ -596,10 +615,15 @@ export class RequestService {
       });
     }
 
+    if (request.body.qs) {
+      const name = request.body.qs;
+      possibleTeams.andWhere(`team.name LIKE '%${name}%'`);
+    }
+
     if (request.body.ageRange) {
-      possibleTeams.andWhere("team.ageRange = :ageRange", {
-        ageRange: request.body.ageRange,
-      });
+      const [minAge, maxAge] = request.body.ageRange.split("-");
+      possibleTeams.andWhere("team.minAge >= :minAge", { minAge });
+      possibleTeams.andWhere("team.maxAge >= :maxAge", { maxAge });
     }
 
     if (request.body.playedBefore === true) {

@@ -27,6 +27,12 @@ export class CreateTeamDto {
   ageRange: string;
 
   @IsOptional()
+  minAge: number;
+
+  @IsOptional()
+  maxAge: number;
+
+  @IsOptional()
   level: string;
 
   @IsOptional()

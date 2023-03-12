@@ -86,7 +86,7 @@ export class EventService {
     }
 
     const myEvents = await queryBuilder.getMany();
-    const myEventIds = myEvents.map((event) => event.id).concat(-1);
+    const myEventIds = myEvents.map((event) => event.id).concat([-1]);
 
     const qb = eventsRepository
       .createQueryBuilder("event")
