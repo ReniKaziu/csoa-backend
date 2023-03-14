@@ -20,7 +20,6 @@ import { TeamUsers } from "../../team/entities/team.users.entity";
 import { Team } from "../../team/entities/team.entity";
 import { Event, EventStatus } from "../../event/entities/event.entity";
 import { Request as Invitations, RequestStatus } from "../../request/entities/request.entity";
-const UUID = require("uuid/v1");
 import { accountSid, authToken } from "../../credentials";
 
 const client = require("twilio")(accountSid, authToken);
@@ -474,7 +473,7 @@ export class UserService {
 
     client.messages
       .create({
-        from: "18507530730",
+        from: "+18507530730",
         to: "+355" + phoneNumber,
         body: `Verification code for your CSOA account: ${
           codeExisting ?? code.value
@@ -485,7 +484,6 @@ export class UserService {
       .done();
     successCallback(code);
   }
-
   static async insertProfilePicture(request: Request, response: Response) {
     const userRepository = getRepository(User);
     const user = await userRepository.findOneOrFail({
