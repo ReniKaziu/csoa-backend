@@ -20,21 +20,17 @@ import { ReviewRouter } from "./review/review.router";
 import { NotificationRouter } from "./notifications/notification.router";
 import { ComplexRouter } from "./complex/complex.router";
 import { TeamUsersRouter } from "./team/team.users.router";
-import {
-  checkForCompletedEvents,
-  checkForEventsTomorrow,
-  checkForEventsTwoHoursLater,
-} from "./crones/crones.service";
+import { checkForCompletedEvents, checkForEventsTomorrow, checkForEventsTwoHoursLater } from "./crones/crones.service";
 const CronJob = require("cron").CronJob;
 
 // MUST STAY ON TOP OF ALL OTHER APP.* DON'T MOVE
+app.use(cors());
 app.use(express.static(join(__dirname, "..", "public")));
 
 createConnection()
   .then(async (connection) => {
     // await connection.query(`SET GLOBAL time_zone = '+00:00';`);
     // await connection.query(`SET time_zone = '+00:00';`);
-    app.use(cors());
     app.use(bodyParser.json({ limit: "200mb" }));
     app.use(bodyParser.urlencoded({ limit: "200mb", extended: true }));
     //app.use(expressFormidable());
@@ -76,42 +72,15 @@ createConnection()
     const port = process.env.PORT || 4500;
 
     if (parseInt(process.env.NODE_APP_INSTANCE) === 0) {
-      new CronJob(
-        "*/4 * * * * *",
-        checkForCompletedEvents,
-        null,
-        true,
-        "Europe/Rome"
-      );
-      new CronJob(
-        "*/5 * * * * *",
-        checkForEventsTwoHoursLater,
-        null,
-        true,
-        "Europe/Rome"
-      );
-      new CronJob(
-        "0 11 * * *",
-        checkForEventsTomorrow,
-        null,
-        true,
-        "Europe/Rome"
-      );
+      new CronJob("*/4 * * * * *", checkForCompletedEvents, null, true, "Europe/Rome");
+      new CronJob("*/5 * * * * *", checkForEventsTwoHoursLater, null, true, "Europe/Rome");
+      new CronJob("0 11 * * *", checkForEventsTomorrow, null, true, "Europe/Rome");
     }
 
     if (process.env.SSL_LOCATION) {
-      const privateKey = fs.readFileSync(
-        process.env.SSL_LOCATION + "/privkey.pem",
-        "utf8"
-      );
-      const certificate = fs.readFileSync(
-        process.env.SSL_LOCATION + "/cert.pem",
-        "utf8"
-      );
-      const ca = fs.readFileSync(
-        process.env.SSL_LOCATION + "/chain.pem",
-        "utf8"
-      );
+      const privateKey = fs.readFileSync(process.env.SSL_LOCATION + "/privkey.pem", "utf8");
+      const certificate = fs.readFileSync(process.env.SSL_LOCATION + "/cert.pem", "utf8");
+      const ca = fs.readFileSync(process.env.SSL_LOCATION + "/chain.pem", "utf8");
       const credentials = {
         key: privateKey,
         cert: certificate,

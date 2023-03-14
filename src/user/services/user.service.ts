@@ -22,9 +22,9 @@ import { Event, EventStatus } from "../../event/entities/event.entity";
 import { Request as Invitations, RequestStatus } from "../../request/entities/request.entity";
 const UUID = require("uuid/v1");
 
-const accountSid = "ACd684d7d904d8ca841081b583bd0eb4d9";
+const accountSid = "ACea4210396ed1e24b0cde633cb4321631";
 // const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = "225cb1eacac6ea2abc6ad799ec9f4280";
+const authToken = "07cbd85048b8b353a4de135ea29ec178";
 // const authToken = process.env.TWILIO_ACCOUNT_AUTH_TOKEN;
 
 const client = require("twilio")(accountSid, authToken);
@@ -38,6 +38,7 @@ export class UserService {
 
   static insert = async (userPayload, request: Request, response: Response) => {
     const userRepository = getRepository(User);
+    const codeRepository = getRepository(Code);
 
     if (userPayload.phoneNumber) {
       if (userPayload.phoneNumber.slice(0, 3) === "355")
@@ -58,8 +59,6 @@ export class UserService {
       });
       if (isExistingEmail) throw "User with this email already exists";
     }
-
-    // const codeRepository = getRepository(Code);
 
     // const now = new Date();
 
@@ -477,18 +476,17 @@ export class UserService {
       await codeRepository.save(code);
     }
 
-    // client.messages
-    //   .create({
-    //     from: "18507530730",
-    //     // from: '18507530730',
-    //     to: "+355" + phoneNumber,
-    //     body: `Verification code for your CSOA account: ${
-    //       codeExisting ?? code.value
-    //     }. The code is valid for 1 hour from now.`,
-    //   })
-    //   .then(() => successCallback(code))
-    //   .catch((err) => errCallback(err))
-    //   .done();
+    client.messages
+      .create({
+        from: "18507530730",
+        to: "+355" + phoneNumber,
+        body: `Verification code for your CSOA account: ${
+          codeExisting ?? code.value
+        }. The code is valid for 1 hour from now.`,
+      })
+      .then(() => successCallback(code))
+      .catch((err) => errCallback(err))
+      .done();
     successCallback(code);
   }
 
