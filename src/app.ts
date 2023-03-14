@@ -69,8 +69,8 @@ createConnection()
 
     const port = process.env.PORT || 4500;
 
-    new CronJob("*/4 * * * * *", checkForCompletedEvents, null, true, "Europe/Rome");
-    new CronJob("*/5 * * * * *", checkForEventsTwoHoursLater, null, true, "Europe/Rome");
+    new CronJob("*/15 * * * *", checkForCompletedEvents, null, true, "Europe/Rome");
+    new CronJob("*/14 * * * *", checkForEventsTwoHoursLater, null, true, "Europe/Rome");
     new CronJob("0 11 * * *", checkForEventsTomorrow, null, true, "Europe/Rome");
 
     if (process.env.SSL_LOCATION) {

@@ -293,8 +293,6 @@ export const checkForEventsTwoHoursLater = async () => {
         }
       }
     }
-    console.log({ notifications });
-    console.log({ pushNotifications });
   }
 
   // 2- Update events query
