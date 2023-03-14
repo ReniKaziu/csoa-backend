@@ -475,9 +475,9 @@ export class UserService {
       .create({
         from: "LOJA",
         to: "+355" + phoneNumber,
-        body: `Verification code for your CSOA account: ${
+        body: `Kodi i verifikimit per llogarine tuaj ne LOJA eshte: ${
           codeExisting ?? code.value
-        }. The code is valid for 1 hour from now.`,
+        }. Kodi eshte i vlefshem per 1 ore nga tani.`,
       })
       .then(() => successCallback(code))
       .catch((err) => errCallback(err))
