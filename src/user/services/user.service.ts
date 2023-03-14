@@ -473,7 +473,7 @@ export class UserService {
 
     client.messages
       .create({
-        from: "+18507530730",
+        from: "18507530730",
         to: "+355" + phoneNumber,
         body: `Verification code for your CSOA account: ${
           codeExisting ?? code.value
