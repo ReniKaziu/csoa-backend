@@ -21,11 +21,7 @@ import { Team } from "../../team/entities/team.entity";
 import { Event, EventStatus } from "../../event/entities/event.entity";
 import { Request as Invitations, RequestStatus } from "../../request/entities/request.entity";
 const UUID = require("uuid/v1");
-
-const accountSid = "ACea4210396ed1e24b0cde633cb4321631";
-// const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = "07cbd85048b8b353a4de135ea29ec178";
-// const authToken = process.env.TWILIO_ACCOUNT_AUTH_TOKEN;
+import { accountSid, authToken } from "../../credentials";
 
 const client = require("twilio")(accountSid, authToken);
 
