@@ -482,8 +482,8 @@ export class UserService {
       .then(() => successCallback(code))
       .catch((err) => errCallback(err))
       .done();
-    successCallback(code);
   }
+
   static async insertProfilePicture(request: Request, response: Response) {
     const userRepository = getRepository(User);
     const user = await userRepository.findOneOrFail({

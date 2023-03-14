@@ -59,27 +59,27 @@ export class EventRouter {
 
     app.patch("/v2/events/:eventId/confirm", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([UserRole.COMPNAY]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.COMPNAY, UserRole.ADMIN]),
       EventController.confirm,
     ]);
 
     app.delete("/events/:eventId", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([UserRole.COMPNAY, UserRole.USER]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.COMPNAY, UserRole.USER, UserRole.ADMIN]),
       PermissionMiddleware.checkIfEventCreatorOrCompany,
       EventController.delete,
     ]);
 
     app.delete("/events/:eventId/cancel", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([UserRole.COMPNAY, UserRole.USER]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.COMPNAY, UserRole.ADMIN, UserRole.USER]),
       PermissionMiddleware.checkIfEventCreatorOrCompany,
       EventController.cancel,
     ]);
 
     app.delete("/after-confirmation/events/:eventId", [
       AuthenticationMiddleware.checkJwtToken,
-      PermissionMiddleware.checkAllowedPermissions([UserRole.USER]),
+      PermissionMiddleware.checkAllowedPermissions([UserRole.USER, UserRole.ADMIN]),
       PermissionMiddleware.checkIfEventCreatorOrCompany,
       EventController.deleteAfterCancelation,
     ]);
